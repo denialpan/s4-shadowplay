@@ -50,6 +50,9 @@ const FileUpload = () => {
 
     return (
         <div>
+            <div>
+                s4 shadowplay frontend
+            </div>
             <form onSubmit={handleSubmit}>
                 <input type="file" onChange={handleFileChange} />
                 <button type="submit" disabled={loading}>Upload</button>
