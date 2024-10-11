@@ -7,6 +7,14 @@ const s3 = new AWS.S3({
     region: process.env.AWS_REGION,
 });
 
+export const config = {
+    api: {
+        bodyParser: {
+            sizeLimit: '500mb'
+        }
+    }
+};
+
 export default async function handler(req, res) {
     if (req.method === 'POST') {
         const { file, name, type } = req.body; // assuming the file is being sent as a base64 encoded string
@@ -22,8 +30,10 @@ export default async function handler(req, res) {
             ACL: 'public-read' // adjust this based on your needs
         };
 
+        const options = { partSize: 5 * 1024 * 1024, queueSize: 10 };
+
         try {
-            const data = await s3.upload(params).promise();
+            const data = await s3.upload(params, options).promise();
             res.status(200).json({ message: 'File uploaded successfully', data });
         } catch (error) {
             console.error(error);
