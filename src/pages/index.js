@@ -1,9 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const FileUpload = () => {
     const [file, setFile] = useState(null);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState('');
+
+
+    const [uploadProgress, setUploadProgress] = useState(0); // browser to backend progress
+    const [s3Progress, setS3Progress] = useState(0); // backend to S3 progress
+
+    useEffect(() => {
+        const sse = new EventSource('/api/upload');
+        console.log("SSE connection opened");
+
+        // progress from sse backend
+        sse.onmessage = function (event) {
+            console.log("Received progress from backend:", event.data);
+            const progress = Number(event.data);
+            if (!isNaN(progress)) {
+                setS3Progress(progress);
+            }
+        };
+
+        sse.onerror = function (error) {
+            console.error("SSE error:", error);
+        };
+
+        return () => {
+            console.log(" FRONTEND SSE connection closed");
+            sse.close();
+        };
+    }, []);
+
 
     const handleFileChange = (e) => {
         setFile(e.target.files[0]);
@@ -16,48 +44,56 @@ const FileUpload = () => {
         setLoading(true);
         setMessage('');
 
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-            const base64data = reader.result;
+        setUploadProgress(0);
+        setS3Progress(0);
 
-            // Create an object with file details
-            const fileData = {
-                file: base64data,
-                name: file.name, // Include the file name
-                type: file.type, // Include the file type
-            };
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('name', file.name);
+        formData.append('type', file.type);
 
-            const response = await fetch('/api/upload', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(fileData), // Send the fileData object
-            });
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload');
 
-            const data = await response.json();
-            if (response.ok) {
-                setMessage(data.message);
+        // Track client-to-server upload progress
+        xhr.upload.onprogress = function (event) {
+            if (event.lengthComputable) {
+                const percentComplete = Math.round((event.loaded / event.total) * 100);
+                setUploadProgress(percentComplete);
+            }
+        };
+
+        xhr.onload = function () {
+            if (xhr.status === 200) {
+                setMessage('File uploaded successfully!');
             } else {
-                setMessage(data.error);
+                setMessage(`Error uploading file: ${xhr.responseText}`);
             }
             setLoading(false);
         };
 
-        reader.readAsDataURL(file);
-    };
+        xhr.onerror = function () {
+            setMessage('An error occurred during the file upload.');
+            setLoading(false);
+        };
 
+        xhr.send(formData);
+    };
 
     return (
         <div>
-            <div>
-                s4 shadowplay frontend
-            </div>
+            <h2>File Upload with Progress</h2>
             <form onSubmit={handleSubmit}>
                 <input type="file" onChange={handleFileChange} />
                 <button type="submit" disabled={loading}>Upload</button>
             </form>
-            {loading && <p>Uploading...</p>}
+
+            {loading && (
+                <div>
+                    <p>Client to Backend Progress: {uploadProgress}%</p>
+                    <p>Backend to S3 Progress: {s3Progress}%</p>
+                </div>
+            )}
             {message && <p>{message}</p>}
         </div>
     );
