@@ -1,100 +1,135 @@
-import { useState, useEffect } from 'react';
+import S3FileList from '@/components/S3FileList';
+import React, { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import axios from 'axios';
 
 const FileUpload = () => {
-    const [file, setFile] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState('');
-
-
-    const [uploadProgress, setUploadProgress] = useState(0); // browser to backend progress
-    const [s3Progress, setS3Progress] = useState(0); // backend to S3 progress
+    const [files, setFiles] = useState([]);
+    const [uploadProgress, setUploadProgress] = useState({});
+    const [s3Progress, setS3Progress] = useState({});
+    const [refreshFilesTrigger, setRefreshFilesTrigger] = useState(0);
 
     useEffect(() => {
-        const sse = new EventSource('/api/upload');
-        console.log("SSE connection opened");
+        if (files.length > 0) {
+            const sse = new EventSource('/api/FileUpload');
 
-        // progress from sse backend
-        sse.onmessage = function (event) {
-            console.log("Received progress from backend:", event.data);
-            const progress = Number(event.data);
-            if (!isNaN(progress)) {
-                setS3Progress(progress);
-            }
-        };
+            sse.onmessage = function (event) {
+                const { fileUUID, progress } = JSON.parse(event.data);
+                setS3Progress((prev) => ({
+                    ...prev,
+                    [fileUUID]: progress,
+                }));
+            };
 
-        sse.onerror = function (error) {
-            console.error("SSE error:", error);
-        };
+            sse.onerror = function (error) {
+                console.error('SSE error:', error);
+                sse.close();
+            };
 
-        return () => {
-            console.log(" FRONTEND SSE connection closed");
-            sse.close();
-        };
-    }, []);
+            return () => {
+                sse.close();
+            };
+        }
 
+    }, [files]);
 
-    const handleFileChange = (e) => {
-        setFile(e.target.files[0]);
+    const handleFiles = (selectedFiles) => {
+        const filesWithUUIDs = Array.from(selectedFiles).map((file) => ({
+            file,
+            fileUUID: uuidv4(), // unique uuid for file
+        }));
+        setFiles((prevFiles) => [...prevFiles, ...filesWithUUIDs]);
+        uploadFiles(filesWithUUIDs);
+
     };
 
-    const handleSubmit = async (e) => {
+    const manualFileUpload = (e) => {
+        handleFiles(e.target.files);
+    };
+
+    const handleDragOver = (e) => {
         e.preventDefault();
-        if (!file) return;
+        e.stopPropagation();
+    };
 
-        setLoading(true);
-        setMessage('');
+    const handleDrop = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFiles(e.dataTransfer.files);
+        }
+    };
 
-        setUploadProgress(0);
-        setS3Progress(0);
+    const uploadFiles = (confirmedFiles) => {
 
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('name', file.name);
-        formData.append('type', file.type);
+        confirmedFiles.forEach(async (fileObject) => {
+            const formData = new FormData();
+            formData.append('file', fileObject.file);
+            formData.append('name', fileObject.file.name);
+            formData.append('type', fileObject.file.type);
+            formData.append('fileUUID', fileObject.fileUUID);
 
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/upload');
+            try {
+                const response = await axios.post('/api/FileUpload', formData, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                    onUploadProgress: (progressEvent) => {
+                        const percentComplete = Math.round(
+                            (progressEvent.loaded * 100) / progressEvent.total
+                        );
+                        setUploadProgress((prev) => ({
+                            ...prev,
+                            [fileObject.fileUUID]: percentComplete,
+                        }));
+                    },
+                });
 
-        // Track client-to-server upload progress
-        xhr.upload.onprogress = function (event) {
-            if (event.lengthComputable) {
-                const percentComplete = Math.round((event.loaded / event.total) * 100);
-                setUploadProgress(percentComplete);
+                if (response.status === 200) {
+                    console.log(`File ${fileObject.file.name} uploaded successfully!`);
+                    // Remove the uploaded file from the `files` state
+                    setFiles((prevFiles) =>
+                        prevFiles.filter((fileItem) => fileItem.fileUUID !== fileObject.fileUUID)
+                    );
+                    setRefreshFilesTrigger((prev) => prev + 1);
+                } else {
+                    console.error(`Error uploading file ${fileObject.file.name}`);
+                }
+            } catch (error) {
+                console.error(`An error occurred during the file upload for ${fileObject.file.name}:`, error);
             }
-        };
-
-        xhr.onload = function () {
-            if (xhr.status === 200) {
-                setMessage('File uploaded successfully!');
-            } else {
-                setMessage(`Error uploading file: ${xhr.responseText}`);
-            }
-            setLoading(false);
-        };
-
-        xhr.onerror = function () {
-            setMessage('An error occurred during the file upload.');
-            setLoading(false);
-        };
-
-        xhr.send(formData);
+        });
     };
 
     return (
         <div>
-            <h2>File Upload with Progress</h2>
-            <form onSubmit={handleSubmit}>
-                <input type="file" onChange={handleFileChange} />
-                <button type="submit" disabled={loading}>Upload</button>
-            </form>
 
-            {loading && (
-                <div>
-                    <p>Client to Backend Progress: {uploadProgress}%</p>
-                    <p>Backend to S3 Progress: {s3Progress}%</p>
-                </div>
-            )}
-            {message && <p>{message}</p>}
+            <div
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                style={{
+                    border: '2px dashed #ccc',
+                    borderRadius: '0px',
+                    padding: '20px',
+                    textAlign: 'center',
+                }}>
+
+                <h2>s4-shadowplay</h2>
+                <input type="file" multiple onChange={manualFileUpload} />
+
+                <ul>
+                    {files.map(({ file, fileUUID }) => (
+                        <li key={fileUUID}>
+                            <p>{file.name}</p>
+                            <p>Client-to-Backend Progress: {uploadProgress[fileUUID] || 0}%</p>
+                            <p>Backend-to-S3 Progress: {s3Progress[fileUUID] || 0}%</p>
+                        </li>
+                    ))}
+                </ul>
+
+            </div>
+
+            <S3FileList refreshFilesTrigger={refreshFilesTrigger} />
         </div>
     );
 };
