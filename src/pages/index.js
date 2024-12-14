@@ -2,12 +2,15 @@ import S3FileList from '@/components/S3FileList';
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import axios from 'axios';
+import { useRouter } from 'next/router';
 
-const FileUpload = () => {
+const index = () => {
     const [files, setFiles] = useState([]);
     const [uploadProgress, setUploadProgress] = useState({});
     const [s3Progress, setS3Progress] = useState({});
     const [refreshFilesTrigger, setRefreshFilesTrigger] = useState(0);
+
+    const router = useRouter();
 
     useEffect(() => {
         if (files.length > 0) {
@@ -43,6 +46,20 @@ const FileUpload = () => {
 
     };
 
+    const handleSignOut = async () => {
+        try {
+            // Call the sign-out API to clear the cookie
+            await axios.post('/api/user/logout');
+
+            // Redirect to the login page
+            router.push('/login');
+
+        } catch (error) {
+            console.error('Error signing out:', error);
+            alert('Failed to sign out. Please try again.');
+        }
+    };
+
     const manualFileUpload = (e) => {
         handleFiles(e.target.files);
     };
@@ -70,7 +87,7 @@ const FileUpload = () => {
             formData.append('fileUUID', fileObject.fileUUID);
 
             try {
-                const response = await axios.post('/api/FileUpload', formData, {
+                const response = await axios.post('/api/file/upload', formData, {
                     headers: {
                         'Content-Type': 'multipart/form-data',
                     },
@@ -128,10 +145,10 @@ const FileUpload = () => {
                 </ul>
 
             </div>
-
+            <button onClick={handleSignOut}> SIGN OUT </button>
             <S3FileList refreshFilesTrigger={refreshFilesTrigger} />
         </div>
     );
 };
 
-export default FileUpload;
+export default index;

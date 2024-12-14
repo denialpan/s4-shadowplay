@@ -14,10 +14,10 @@ const S3FileList = ({ refreshFilesTrigger }) => {
 
     const fetchFiles = async () => {
         try {
-            const res = await axios.get('/api/FileRetrieve');
+            const res = await axios.get('/api/file/retrieve', { withCredentials: true });
             setFiles(res.data.files);
         } catch (err) {
-            console.error("Error fetching S3 files", err);
+            console.error('Error fetching S3 files', err);
         } finally {
             setLoading(false);
         }
@@ -30,7 +30,7 @@ const S3FileList = ({ refreshFilesTrigger }) => {
     // handle file deletion
     const handleDelete = async (fileKey) => {
         try {
-            const response = await axios.delete('/api/FileDelete', {
+            const response = await axios.delete('/api/file/delete', {
                 data: { fileKey },  // file key in request body
             });
 
