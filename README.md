@@ -1,28 +1,26 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+s4-shadowplay is a personal project to serve as a file storage system utilizing Amazon S3 as the storage component. Primarily initially used to store video game clips, commonly known as "shadowplays" based on Nvidia, but has expanded to serve as cheaper alternative to storage solutions like Google Drive and Dropbox (gigabytes/US dollar).
 
 ## Getting Started
 
-First, run the development server:
+Create `.env.local` in cloned root directory, with these contents:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```text
+AWS_ACCESS_KEY_ID=[aws key]
+AWS_SECRET_ACCESS_KEY=[aws secret access key]
+AWS_REGION=[aws region]
+AWS_S3_BUCKET=[aws s3 bucket name]
+JWT_SECRET=[jwt token]
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+AWS related keys and tokens can be generated and retrieved from the AWS console and generating an access key.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+Install packages and run
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+```bash
+npm i && npm run dev
+```
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+Page will be running on [localhost:3000](localhost:3000) by default.
 
 ## Learn More
 
