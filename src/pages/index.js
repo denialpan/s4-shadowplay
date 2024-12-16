@@ -14,7 +14,7 @@ const index = () => {
 
     useEffect(() => {
         if (files.length > 0) {
-            const sse = new EventSource('/api/FileUpload');
+            const sse = new EventSource('/api/file/upload');
 
             sse.onmessage = function (event) {
                 const { fileUUID, progress } = JSON.parse(event.data);
