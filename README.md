@@ -24,7 +24,7 @@ Install packages and run
 npm i && npm run dev
 ```
 
-Page will be running on [localhost:3000](localhost:3000) by default.
+Page will be running on [localhost:3000](http:localhost:3000) by default.
 
 ## Learn More
 
