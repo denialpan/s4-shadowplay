@@ -11,23 +11,12 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
 
-        const cookies = req.headers.cookie ? parse(req.headers.cookie) : {};
-        const token = cookies.authToken;
-
-        if (!token) {
-            return res.status(401).json({ error: 'Unauthorized. No token provided.' });
-        }
-
-        const bucketName = process.env.AWS_S3_BUCKET;
-
         const params = {
-            Bucket: bucketName,
+            Bucket: process.env.AWS_S3_BUCKET,
         };
 
         try {
 
-            const decoded = jwt.verify(token, JWT_KEY);
-            req.user = decoded;
             const data = await s3.listObjectsV2(params).promise();
 
             const files = data.Contents.map(file => ({
