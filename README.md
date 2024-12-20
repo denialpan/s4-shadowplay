@@ -24,7 +24,69 @@ Install packages and run
 npm i && npm run dev
 ```
 
-Page will be running on [localhost:3000](http:localhost:3000) by default.
+Page and API routes will be running on [localhost:3000](http:localhost:3000) by default.
+
+## Todo:
+
+- full screen drag and drop
+- file / directory things
+  - folder operations
+  - file operations
+  - shareable file public link
+    - expire time (allow infinite...? default 1 hour maybe)
+    - allow embed
+  - file tagging
+- add config file to user customization
+  - system
+    - upload chunk size (default: 5mb)
+    - number of upload chunks (default: 100)
+    - max concurrent files uploaded at same time (default: 7)
+  - UI
+    - colors
+    - theming...?
+- notification corner popup
+  - upload failed (red)
+  - upload success (green)
+  - miscellaneous that i have no control over (aws being down etc)
+  - lost internet connection (locally)
+
+## Review
+
+This section helps to summarize everything that I have learned from solely this project and will continue to research.
+
+- jwt and jose
+  - properties of jwt tokens
+  - creating a proper jwt token
+  - session token expiration and resetting
+- database
+  - initializing and connecting database
+  - read write to sqlite3 db
+  - `user.db` to handle accounts
+- nextjs file structure (pages)
+  - certain file and folder names are reserved for nextjs
+    - `/api` - files under here are automatically api routes
+    - `index.js` - default page to load at root of \*directory
+    - `middleware.js` - serverside before any page or route is loaded
+      - allows easy authentication for page and api routing based on use
+  - folder structure dictates how a page or api route will be structured
+- file streaming and uploading
+  - multiple ways to handle file uploads to S3, most commonly is the method implemented here, where a file travels `frontend -> backend` then `backend -> S3 bucket`
+  - multipart chunk uploading
+- react usestate
+  - array handling
+  - adding and removing based on conditions
+- miscellaneous - things that i learned and have decided not to implement in return for something else that fits this project's purpose more
+  - sse (server side event) - how information is passed from backend to frontend without strictly having to send response
+    - originally used for tracking the original file upload progress from backend to frontend
+  - concurrent vs parallelization - originally used to upload chunks of a file instead of sequentially, but introduced complexity in displaying upload progress
+    - concurrent - one CPU core used to rapidly switch between tasks
+    - parallel - usage of multiple cores for tasks
+    - both were a risk to CPU performance and upload speed
+- common internet codes
+  - 200
+  - 404
+  - 405
+  - 500
 
 ## Learn More
 
@@ -34,9 +96,3 @@ To learn more about Next.js, take a look at the following resources:
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
