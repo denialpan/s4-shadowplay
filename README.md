@@ -50,6 +50,11 @@ Page and API routes will be running on [localhost:3000](http:localhost:3000) by 
   - miscellaneous that i have no control over (aws being down etc)
   - lost internet connection (locally)
 
+## Future Unlikely Plans
+
+- Add system option of how the file to be uploaded, either in chunks or single file (single file currently implemented).
+  - cost risk, as it may be the difference between 1 and 100 PUT requests. See [AWS S3 pricing](https://aws.amazon.com/s3/pricing/).
+
 ## Review
 
 This section helps to summarize everything that I have learned from solely this project and will continue to research.
@@ -76,7 +81,7 @@ This section helps to summarize everything that I have learned from solely this 
   - array handling
   - adding and removing based on conditions
 - miscellaneous - things that i learned and have decided not to implement in return for something else that fits this project's purpose more
-  - sse (server side event) - how information is passed from backend to frontend without strictly having to send response
+  - sse (server sent event) - how information is passed from backend to frontend without strictly having to send response
     - originally used for tracking the original file upload progress from backend to frontend
   - concurrent vs parallelization - originally used to upload chunks of a file instead of sequentially, but introduced complexity in displaying upload progress
     - concurrent - one CPU core used to rapidly switch between tasks
