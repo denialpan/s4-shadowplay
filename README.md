@@ -54,6 +54,9 @@ Page and API routes will be running on [localhost:3000](http:localhost:3000) by 
 
 - Add system option of how the file to be uploaded, either in chunks or single file (single file currently implemented).
   - cost risk, as it may be the difference between 1 and 100 PUT requests. See [AWS S3 pricing](https://aws.amazon.com/s3/pricing/).
+  - system config options
+    - upload chunk size (default: 5mb)
+    - number of upload chunks (default: 100)
 
 ## Review
 
