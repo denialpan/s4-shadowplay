@@ -7,34 +7,9 @@ import { useRouter } from 'next/router';
 const index = () => {
     const [files, setFiles] = useState([]);
     const [uploadProgress, setUploadProgress] = useState({});
-    const [s3Progress, setS3Progress] = useState({});
     const [refreshFilesTrigger, setRefreshFilesTrigger] = useState(0);
 
     const router = useRouter();
-
-    useEffect(() => {
-        if (files.length > 0) {
-            const sse = new EventSource('/api/file/upload');
-
-            sse.onmessage = function (event) {
-                const { fileUUID, progress } = JSON.parse(event.data);
-                setS3Progress((prev) => ({
-                    ...prev,
-                    [fileUUID]: progress,
-                }));
-            };
-
-            sse.onerror = function (error) {
-                console.error('SSE error:', error);
-                sse.close();
-            };
-
-            return () => {
-                sse.close();
-            };
-        }
-
-    }, [files]);
 
     const handleFiles = (selectedFiles) => {
         const filesWithUUIDs = Array.from(selectedFiles).map((file) => ({
@@ -77,46 +52,84 @@ const index = () => {
         }
     };
 
+    const DEFAULT_CHUNK_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_CHUNKS = 100; // maximum number of chunks
+
     const uploadFiles = (confirmedFiles) => {
-
         confirmedFiles.forEach(async (fileObject) => {
-            const formData = new FormData();
-            formData.append('file', fileObject.file);
-            formData.append('name', fileObject.file.name);
-            formData.append('type', fileObject.file.type);
-            formData.append('fileUUID', fileObject.fileUUID);
+            const file = fileObject.file;
 
-            try {
-                const response = await axios.post('/api/file/upload', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                    onUploadProgress: (progressEvent) => {
-                        const percentComplete = Math.round(
-                            (progressEvent.loaded * 100) / progressEvent.total
-                        );
+            if (file.size === 0) {
+                console.error("File size is 0 bytes.");
+                setFiles((prevFiles) =>
+                    prevFiles.filter((fileItem) => fileItem.fileUUID !== fileObject.fileUUID)
+                );
+                return;
+            }
+
+            // determine chunk size dynamically
+            const chunkSize = file.size > DEFAULT_CHUNK_SIZE * MAX_CHUNKS
+                ? Math.ceil(file.size / MAX_CHUNKS)
+                : DEFAULT_CHUNK_SIZE;
+
+            const totalChunks = Math.ceil(file.size / chunkSize);
+            console.log(`File info: size=${file.size}, chunkSize=${chunkSize}, totalChunks=${totalChunks}`);
+
+            let uploadedChunks = 0;
+
+            for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                const start = chunkIndex * chunkSize;
+                const end = Math.min(start + chunkSize, file.size);
+                const chunk = file.slice(start, end);
+
+                // check chunk slicing
+                console.log(`Chunk ${chunkIndex + 1}: start=${start}, end=${end}, size=${end - start}`);
+
+                const formData = new FormData();
+                formData.append('file', chunk);
+                formData.append('name', file.name);
+                formData.append('type', file.type);
+                formData.append('fileUUID', fileObject.fileUUID);
+                formData.append('chunkIndex', chunkIndex);
+                formData.append('totalChunks', totalChunks);
+
+                try {
+                    const response = await axios.post('/api/file/upload', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                        timeout: 60000,
+                    });
+
+                    if (response.status === 200) {
+                        uploadedChunks++;
+                        const percentComplete = Math.round((uploadedChunks / totalChunks) * 100);
                         setUploadProgress((prev) => ({
                             ...prev,
                             [fileObject.fileUUID]: percentComplete,
                         }));
-                    },
-                });
-
-                if (response.status === 200) {
-                    console.log(`File ${fileObject.file.name} uploaded successfully!`);
-                    // Remove the uploaded file from the `files` state
-                    setFiles((prevFiles) =>
-                        prevFiles.filter((fileItem) => fileItem.fileUUID !== fileObject.fileUUID)
+                    } else {
+                        console.error(`Error uploading chunk ${chunkIndex + 1} for file ${file.name}`);
+                    }
+                } catch (error) {
+                    console.error(
+                        `An error occurred while uploading chunk ${chunkIndex + 1} for file ${file.name}:`,
+                        error
                     );
-                    setRefreshFilesTrigger((prev) => prev + 1);
-                } else {
-                    console.error(`Error uploading file ${fileObject.file.name}`);
+                    break;
                 }
-            } catch (error) {
-                console.error(`An error occurred during the file upload for ${fileObject.file.name}:`, error);
+            }
+
+            if (uploadedChunks === totalChunks) {
+                console.log(`File ${file.name} uploaded successfully!`);
+                setFiles((prevFiles) =>
+                    prevFiles.filter((fileItem) => fileItem.fileUUID !== fileObject.fileUUID)
+                );
+                setRefreshFilesTrigger((prev) => prev + 1);
             }
         });
     };
+
 
     return (
         <div>
@@ -138,8 +151,7 @@ const index = () => {
                     {files.map(({ file, fileUUID }) => (
                         <li key={fileUUID}>
                             <p>{file.name}</p>
-                            <p>Client-to-Backend Progress: {uploadProgress[fileUUID] || 0}%</p>
-                            <p>Backend-to-S3 Progress: {s3Progress[fileUUID] || 0}%</p>
+                            <p>Upload Progress: {uploadProgress[fileUUID] || 0}%</p>
                         </li>
                     ))}
                 </ul>
