@@ -1,5 +1,15 @@
 s4-shadowplay is a personal project to serve as a file storage system utilizing Amazon S3 as the storage component. Primarily initially used to store video game clips, commonly known as "shadowplays" based on Nvidia, but has expanded to serve as cheaper alternative to storage solutions like Google Drive and Dropbox (gigabytes/US dollar).
 
+## Features
+
+Everything is in alpha, even before alpha if such a stage existed, but base functionality is here with:
+
+- File uploading and progress to an AWS S3 Bucket
+- File deleting from an AWS S3 Bucket
+- JWT token-based authentication for accounts
+- Creating accounts
+- Server-side and middleware authentication for pages and api routes
+
 ## Getting Started
 
 Create `.env.local` in cloned root directory, with these contents:
@@ -29,6 +39,8 @@ Page and API routes will be running on [localhost:3000](http:localhost:3000) by 
 ## Todo:
 
 - full screen drag and drop
+- JWT, add time refresh on interaction instead of set 1 hour times
+- include account information in componenets, like account name
 - file / directory things
   - folder operations
   - file operations
