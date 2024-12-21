@@ -70,13 +70,16 @@ This section helps to summarize everything that I have learned from solely this 
   - initializing and connecting database
   - read write to sqlite3 db
   - `user.db` to handle accounts
-- nextjs file structure (pages)
-  - certain file and folder names are reserved for nextjs
-    - `/api` - files under here are automatically api routes
-    - `index.js` - default page to load at root of \*directory
-    - `middleware.js` - serverside before any page or route is loaded
+- nextjs
+  - file structure (pages)
+    - certain file and folder names are reserved for nextjs
+      - `/api` - files under here are automatically api routes
+      - `index.js` - default page to load at root of \*directory
+      - `middleware.js` - serverside before any page or route is loaded
       - allows easy authentication for page and api routing based on use
-  - folder structure dictates how a page or api route will be structured
+    - folder structure dictates how a page or api route will be structured
+  - basic authentication
+    - authorization context that can be used to conditionally render components on pages
 - file streaming and uploading
   - multiple ways to handle file uploads to S3, most commonly is the method implemented here, where a file travels `frontend -> backend` then `backend -> S3 bucket`
   - multipart chunk uploading
@@ -91,10 +94,11 @@ This section helps to summarize everything that I have learned from solely this 
     - parallel - usage of multiple cores for tasks
     - both were a risk to CPU performance and upload speed
 - common internet codes
-  - 200
-  - 404
-  - 405
-  - 500
+  - 200 - success
+  - 304 - page has not changed since last refresh/visit
+  - 404 - cannot find page/route
+  - 405 - does not support method
+  - 500 - internal server error
 
 ## Learn More
 
