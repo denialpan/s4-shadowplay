@@ -3,12 +3,14 @@ s4-shadowplay is a personal project to serve as a file storage system utilizing 
 ## Features
 
 Everything is in alpha, even before alpha if such a stage existed, but base functionality is here with:
+![image](https://github.com/user-attachments/assets/7bcec915-28f5-4280-9df9-73bcd19fc78b)
 
-- File uploading and progress to an AWS S3 Bucket
+- Multi-file uploading and progress to an AWS S3 Bucket
 - File deleting from an AWS S3 Bucket
 - JWT token-based authentication for accounts
 - Creating accounts
 - Server-side and middleware authentication for pages and api routes
+- ~currently the worst css and page presentation on the planet~
 
 ## Getting Started
 
@@ -43,7 +45,7 @@ Page and API routes will be running on [localhost:3000](http:localhost:3000) by 
 - include account information in componenets, like account name
 - file / directory things
   - folder operations
-  - file operations
+  - file operations (bulk select, bulk delete, move to folder)
   - shareable file public link
     - expire time (allow infinite...? default 1 hour maybe)
     - allow embed
