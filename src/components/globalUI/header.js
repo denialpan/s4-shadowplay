@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/authContext";
 const Header = () => {
 
     const router = useRouter();
-    const { isAuthenticated, setIsAuthenticated } = useAuth();
+    const { authData, setAuthData } = useAuth();
 
     const handleSignOut = async () => {
         try {
@@ -24,7 +24,7 @@ const Header = () => {
     return (
         <div>
             s4-shadowplay
-            {isAuthenticated && <button onClick={handleSignOut}> SIGN OUT </button>}
+            {authData.isAuthenticated && <button onClick={handleSignOut}> SIGN OUT {authData.username}</button>}
         </div>
     )
 
