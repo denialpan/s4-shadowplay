@@ -17,18 +17,14 @@ export default function LoginPage() {
             return;
         }
         try {
-            // Axios POST request to login API
             await axios.post('/api/user/login', { username, password });
 
-            // Redirect to root
-            router.push('/');
+            // refresh page, by middleware redirects to /login
+            router.reload();
         } catch (error) {
-            // Handle error response
             if (error.response) {
-                // Server responded with a status other than 2xx
                 alert(error.response.data.message || 'Invalid login credentials.');
             } else {
-                // Network error or other issues
                 console.error('Login error:', error);
                 alert('An error occurred. Please try again.');
             }
