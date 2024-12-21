@@ -9,14 +9,21 @@ const secret = new TextEncoder().encode(JWT_SECRET);
 s4shadowplay.getInitialProps = async (appContext) => {
     const appProps = await App.getInitialProps(appContext);
     const { req } = appContext.ctx;
-    let isAuthenticated = false;
+
+    let authData = {
+        isAuthenticated: false,
+        username: null,
+    }
 
     if (req) {
         const token = req.cookies?.authToken;
         if (token) {
             try {
-                await jwtVerify(token, secret);
-                isAuthenticated = true;
+                const { payload } = await jwtVerify(token, secret);
+                authData = {
+                    isAuthenticated: true,
+                    username: payload.username,
+                }
             } catch (error) {
                 console.error('Invalid or expired token:', error);
             }
@@ -27,18 +34,18 @@ s4shadowplay.getInitialProps = async (appContext) => {
         ...appProps,
         pageProps: {
             ...appProps.pageProps,
-            isAuthenticated,
+            authData,
         },
     };
 };
 
 export default function s4shadowplay({ Component, pageProps }) {
 
-    const { isAuthenticated } = pageProps;
+    const { authData } = pageProps;
 
     return (
 
-        <AuthProvider initialAuthState={isAuthenticated}>
+        <AuthProvider initialAuthData={authData}>
             <Header />
             <Component {...pageProps} />
         </AuthProvider>
