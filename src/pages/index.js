@@ -46,20 +46,6 @@ const index = () => {
 
     };
 
-    const handleSignOut = async () => {
-        try {
-            // Call the sign-out API to clear the cookie
-            await axios.post('/api/user/logout');
-
-            // Redirect to the login page
-            router.push('/login');
-
-        } catch (error) {
-            console.error('Error signing out:', error);
-            alert('Failed to sign out. Please try again.');
-        }
-    };
-
     const manualFileUpload = (e) => {
         handleFiles(e.target.files);
     };
@@ -145,7 +131,6 @@ const index = () => {
                 </ul>
 
             </div>
-            <button onClick={handleSignOut}> SIGN OUT </button>
             <S3FileList refreshFilesTrigger={refreshFilesTrigger} />
         </div>
     );
