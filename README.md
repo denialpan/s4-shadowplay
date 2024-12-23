@@ -1,4 +1,22 @@
-s4-shadowplay is a personal project to serve as a file storage system utilizing Amazon S3 as the storage component. Primarily initially used to store video game clips, commonly known as "shadowplays" based on Nvidia, but has expanded to serve as cheaper alternative to storage solutions like Google Drive and Dropbox (gigabytes/US dollar).
+s4-shadowplay serves to provide a traditional file-management system GUI to Amazon S3.
+
+## Why
+
+This project started on the desire to obtain a form of private storage and seamless sharing of video game clips, commonly known as "shadowplays" or "replays", among friends. Over the years, we've accumulated a ridiculous amount of videos and have discussed methods of archiving them, as viewing them recently have been memorable and nostalgic. By the nature of these files being being around 2 minutes of uncompressed footage, file sizes range from 250 mb to 500 mb, accumulating to hundreds of gigabytes.
+
+Commercial storage solutions like Google Drive and Dropbox seemed good for their built in collaboration of files, but each had their own missing features. **Ideally, we wanted something that contained the ALL of the following:**
+
+- File tagging
+- Traditional file structure and file operations
+- Support for multiple users
+- Role-based file access
+- Search and filtering
+- Embedded previews in temporary/permanent shareable public links
+- Nice UI
+
+Amazon S3 seemed the most unlikely storage solution possible out of any commercial storage service, as it lacked a GUI entirely, but it seemed most appropriate for us, especially for Amazon S3's [data protection](https://docs.aws.amazon.com/AmazonS3/latest/userguide/DataDurability.html) and their method of object storage, requiring just simple HTTP requests to manage all files.
+
+It was just a matter of creating our own interface for all this.
 
 ## Features
 
