@@ -66,6 +66,16 @@ const index = () => {
     const uploadFiles = (confirmedFiles) => {
 
         confirmedFiles.forEach(async (fileObject) => {
+
+            if (fileObject.file.size === 0) {
+                console.log("NICK");
+                setFiles((prevFiles) =>
+                    prevFiles.filter((fileItem) => fileItem.fileUUID !== fileObject.fileUUID)
+                );
+                setRefreshFilesTrigger((prev) => prev + 1);
+                return;
+            }
+
             const formData = new FormData();
             formData.append('file', fileObject.file);
             formData.append('name', fileObject.file.name);

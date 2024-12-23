@@ -1,6 +1,6 @@
 import S3Client from "@/utils/S3Client";
 import jwt from 'jsonwebtoken';
-import { parse } from 'cookie';
+// import { parse } from 'cookie';
 
 const JWT_KEY = process.env.JWT_SECRET;
 

@@ -1,7 +1,11 @@
+import "@/styles/globals.css"
+
 import App from "next/app";
 import Header from "@/components/globalUI/header";
 import { jwtVerify } from "jose";
 import { AuthProvider } from "@/contexts/authContext";
+
+import { ThemeProvider } from "@/components/theme-provider";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const secret = new TextEncoder().encode(JWT_SECRET);
@@ -46,8 +50,16 @@ export default function s4shadowplay({ Component, pageProps }) {
     return (
 
         <AuthProvider initialAuthData={authData}>
-            <Header />
-            <Component {...pageProps} />
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
+            >
+                <Header />
+                <Component {...pageProps} />
+            </ThemeProvider>
+
         </AuthProvider>
     )
 }
