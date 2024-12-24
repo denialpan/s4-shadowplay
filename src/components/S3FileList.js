@@ -14,7 +14,7 @@ const S3FileList = ({ refreshFilesTrigger }) => {
 
     const fetchFiles = async () => {
         try {
-            const res = await axios.get('/api/file/retrieve', { withCredentials: true });
+            const res = await axios.get('/api/file/retrieve');
             const conditional = res.data.files || [];
             setFiles(conditional);
         } catch (err) {
