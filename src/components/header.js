@@ -12,32 +12,18 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+import { SidebarTrigger } from "@/components/ui/sidebar";
+
 const Header = () => {
 
     const router = useRouter();
-    const { authData, setAuthData } = useAuth();
     const { theme, setTheme } = useTheme();
-
-    const handleSignOut = async () => {
-        try {
-
-            await axios.post('/api/user/logout');
-            router.reload();
-
-        } catch (error) {
-
-            console.error('Error signing out:', error);
-            alert('Failed to sign out. Please try again.');
-
-        }
-    };
 
     return (
         <div className="flex justify-between items-center p-4">
-
+            {router.pathname !== "/login" && <SidebarTrigger />}
             s4-shadowplay
 
-            {authData.isAuthenticated && <Button variant="destructive" onClick={handleSignOut}> SIGN OUT {authData.username}</Button>}
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="icon">
