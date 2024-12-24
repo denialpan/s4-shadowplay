@@ -33,9 +33,9 @@ const Header = () => {
     };
 
     return (
-        <div>
-            s4-shadowplay
+        <div className="flex justify-between items-center p-4">
 
+            s4-shadowplay
 
             {authData.isAuthenticated && <Button variant="destructive" onClick={handleSignOut}> SIGN OUT {authData.username}</Button>}
             <DropdownMenu>
