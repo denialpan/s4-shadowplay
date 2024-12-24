@@ -19,7 +19,7 @@ body {
 }
 
 .harsh-curve {
-    transition-timing-function: cubic-bezier(0.055, 0.875, 0.160, 0.960);
+    transition-timing-function: cubic-bezier(0.040, 0.955, 0.040, 0.955);
 }
 
 @layer base {
