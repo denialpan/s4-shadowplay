@@ -2,16 +2,44 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import axios from 'axios';
 
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+
+import { Button } from "@/components/ui/button"
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+
 export default function LoginPage() {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
 
     const router = useRouter();
 
-    const handleLogin = async (e) => {
-        e.preventDefault();
-        console.log(username + " " + password);
-        // Basic input validation
+    // input schema
+    const formSchema = z.object({
+        username: z.string().nonempty(""),
+        password: z.string().nonempty(""),
+    })
+    // form principles
+    const form = useForm({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            username: "",
+            password: "",
+        },
+    });
+
+    async function onSubmit(values) {
+
+        const { username, password } = values;
+
         if (!username || !password) {
             alert('Please fill in all fields.');
             return;
@@ -33,34 +61,43 @@ export default function LoginPage() {
     }
 
     return (
-        <div style={{ maxWidth: '400px', margin: 'auto', padding: '1rem', textAlign: 'center' }}>
-            <h1>Login</h1>
+        <div className="max-w-[500px] mx-auto p-4 md:pt-40">
 
-            <form>
-                <div style={{ marginBottom: '1rem' }}>
-                    <input
-                        type="username"
-                        placeholder="Username"
-                        value={username}
-                        onChange={(e) => setUsername(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '0.5rem' }}
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-2">
+                    <FormField
+                        control={form.control}
+                        name="username"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Username</FormLabel>
+                                <FormControl>
+                                    <Input type="password" placeholder="..." {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
-                </div>
-                <div style={{ marginBottom: '1rem' }}>
-                    <input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                        style={{ width: '100%', padding: '0.5rem' }}
+                    <FormField
+                        control={form.control}
+                        name="password"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Password</FormLabel>
+                                <FormControl>
+                                    <Input type="password" placeholder="..." {...field} />
+                                </FormControl>
+                                <FormDescription>
+                                </FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                        )}
                     />
-                </div>
-                <button onClick={handleLogin} style={{ padding: '0.5rem 1rem' }}>
-                    Login
-                </button>
-            </form>
+                    <Button type="submit">Submit</Button>
+                </form>
+            </Form>
         </div>
     );
 
