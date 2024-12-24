@@ -1,11 +1,14 @@
 import "@/styles/globals.css"
 
 import App from "next/app";
-import Header from "@/components/globalUI/header";
+import Header from "@/components/header";
 import { jwtVerify } from "jose";
 import { AuthProvider } from "@/contexts/authContext";
 
 import { ThemeProvider } from "@/components/theme-provider";
+
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/app-sidebar";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const secret = new TextEncoder().encode(JWT_SECRET);
@@ -56,8 +59,13 @@ export default function s4shadowplay({ Component, pageProps }) {
                 enableSystem
                 disableTransitionOnChange
             >
-                <Header />
-                <Component {...pageProps} />
+                <SidebarProvider defaultOpen={false}>
+                    <AppSidebar />
+                    <div className="flex-1 overflow-y-auto">
+                        <Header />
+                        <Component {...pageProps} />
+                    </div>
+                </SidebarProvider>
             </ThemeProvider>
 
         </AuthProvider>
