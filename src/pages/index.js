@@ -127,7 +127,6 @@ const index = () => {
                     textAlign: 'center',
                 }}>
 
-                <h2>s4-shadowplay</h2>
                 <input type="file" multiple onChange={manualFileUpload} />
 
                 <ul>
