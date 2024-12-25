@@ -23,12 +23,15 @@ It was just a matter of creating our own interface for all this.
 Everything is in alpha, even before alpha if such a stage existed, but base functionality is here with:
 ![image](https://github.com/user-attachments/assets/7bcec915-28f5-4280-9df9-73bcd19fc78b)
 
-- Multi-file uploading and progress to an AWS S3 Bucket
-- File deleting from an AWS S3 Bucket
+- Multi-file uploading and deleting to and from an AWS S3 Bucket
+- Individual file uploading progress (needs CSS)
+- Light and dark theme
 - JWT token-based authentication for accounts
 - Creating accounts
 - Server-side and middleware authentication for pages and api routes
-- ~currently the worst css and page presentation on the planet~
+- ~~decently presentable layout, but still needs work~~
+
+95% of UI components are from [shadcn](https://ui.shadcn.com/), great work from them.
 
 ## Getting Started
 
@@ -58,6 +61,7 @@ Page and API routes will be running on [localhost:3000](http:localhost:3000) by 
 
 ## Todo:
 
+- ~~overhaul css layout~~
 - full screen drag and drop
 - JWT, add time refresh on interaction instead of set 1 hour times
 - include account information in componenets, like account name
@@ -102,7 +106,7 @@ This section helps to summarize everything that I have learned from solely this 
   - initializing and connecting database
   - read write to sqlite3 db
   - `user.db` to handle accounts
-- nextjs
+- nextjs (or frontend related)
   - file structure (pages)
     - certain file and folder names are reserved for nextjs
       - `/api` - files under here are automatically api routes
@@ -112,6 +116,8 @@ This section helps to summarize everything that I have learned from solely this 
     - folder structure dictates how a page or api route will be structured
   - basic authentication
     - authorization context that can be used to conditionally render components on pages
+  - `event.stopPropagation()`
+  - `asChild` component property
 - file streaming and uploading
   - multiple ways to handle file uploads to S3, most commonly is the method implemented here, where a file travels `frontend -> backend` then `backend -> S3 bucket`
   - multipart chunk uploading
