@@ -21,7 +21,7 @@ It was just a matter of creating our own interface for all this.
 ## Features
 
 Everything is in alpha, even before alpha if such a stage existed, but base functionality is here with:
-![s4shadowplaypreview](https://github.com/user-attachments/assets/de4678bb-92b0-43a3-b61f-c27f6aaa94db)
+![s4shadowplaypreview](https://github.com/user-attachments/assets/51300ee9-3a99-4060-98d9-f3901f7d5dd0)
 
 - Multi-file uploading and deleting to and from an AWS S3 Bucket
 - Individual file uploading progress (needs CSS)
