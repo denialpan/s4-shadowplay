@@ -44,14 +44,18 @@ export function DataTable<TData, TValue>({
     fetchFiles,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
+    const [rowSelection, setRowSelection] = React.useState({})
+    const [lastSelectedRow, setLastSelectedRow] = React.useState<number | null>(null);
     const table = useReactTable({
         data,
         columns,
         getCoreRowModel: getCoreRowModel(),
         onSortingChange: setSorting,
         getSortedRowModel: getSortedRowModel(),
+        onRowSelectionChange: setRowSelection,
         state: {
             sorting,
+            rowSelection,
         },
     })
 
@@ -100,10 +104,31 @@ export function DataTable<TData, TValue>({
                                 <ContextMenuTrigger asChild>
                                     <TableRow
                                         key={row.id}
-                                        data-state={row.getIsSelected() && "selected"}
+                                        data-state={row.getIsSelected()}
+                                        onClick={(event) => {
+                                            if (event.shiftKey && lastSelectedRow !== null) {
+                                                // Shift + Click logic: Select range of rows
+                                                const start = Math.min(lastSelectedRow, row.index);
+                                                const end = Math.max(lastSelectedRow, row.index);
+
+                                                for (let i = start; i <= end; i++) {
+                                                    table.getRowModel().rows[i].toggleSelected(true);
+                                                }
+                                            } else if (event.ctrlKey || event.metaKey) {
+                                                // Ctrl + Click logic: Toggle selection for the clicked row
+                                                row.toggleSelected(!row.getIsSelected());
+                                            } else {
+                                                // Regular click: Reset selection and select only the clicked row
+                                                table.resetRowSelection();
+                                                row.toggleSelected(!row.getIsSelected());
+                                                setLastSelectedRow(row.index);
+                                            }
+                                        }}
+                                        className={`desaturate select-none cursor-pointer ${row.getIsSelected() ? "bg-stone-400 dark:bg-stone-700" : ""
+                                            }`}
                                     >
                                         {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
+                                            <TableCell key={cell.id} className="p-0 pl-2">
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </TableCell>
                                         ))}

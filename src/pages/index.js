@@ -118,6 +118,7 @@ const index = () => {
         <div>
 
             <div
+                className="m-4"
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 style={{

@@ -5,6 +5,7 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from '@/components/ui/checkbox'
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -28,7 +29,6 @@ const handleDelete = async (fileKey, fetchFiles) => {
 
         if (response.status === 200) {
             console.log(`File ${fileKey} deleted successfully`);
-            console.log("YEAH THIS IS BEING CALLED THROUGH PASSED IN FUNCTIOn")
             fetchFiles();
         }
     } catch (error) {
@@ -55,6 +55,8 @@ const formatFileDate = (dateString) => {
     }).format(date);
 };
 
+
+
 export type IndividualFile = {
     Key: string
     LastModified: string
@@ -66,29 +68,51 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
 
     return [
         {
+            id: "select",
+            header: ({ table }) => (
+                <Checkbox
+                    checked={
+                        table.getIsAllPageRowsSelected() ||
+                        (table.getIsSomePageRowsSelected() && "indeterminate")
+                    }
+                    onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+                    aria-label="Select all"
+                />
+            ),
+            cell: ({ row }) => (
+                <Checkbox
+                    checked={row.getIsSelected()}
+                    onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    aria-label="Select row"
+                />
+            ),
+            enableSorting: false,
+            enableHiding: false,
+        },
+        {
             accessorKey: "Key",
             header: ({ column }) => {
                 return (
-                    <div className="hover:cursor-pointer" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+                    <div className="line-clamp-1 hover:cursor-pointer" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
                         Name
                     </div>
                 )
             },
             cell: ({ row }) => {
-                return <div className="text-left font-medium">{row.getValue("Key")}</div>
+                return <div className="truncate text-left font-medium">{row.getValue("Key")}</div>
             },
         },
         {
             accessorKey: "LastModified",
             header: ({ column }) => {
                 return (
-                    <div className="hover:cursor-pointer" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+                    <div className="line-clamp-1 hover:cursor-pointer" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
                         Last Modified
                     </div>
                 )
             },
             cell: ({ row }) => {
-                return <div className="text-left font-medium">{formatFileDate(row.getValue("LastModified"))}</div>
+                return <div className="line-clamp-1 text-left font-medium">{formatFileDate(row.getValue("LastModified"))}</div>
             },
         },
         {
@@ -101,27 +125,37 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
                 )
             },
             cell: ({ row }) => {
-                return <div className="text-left font-medium">{formatFileSize(row.getValue("Size"))}</div>
+                return <div className="w-20 line-clamp-1 text-left font-medium">{formatFileSize(row.getValue("Size"))}</div>
             },
         },
         {
             accessorKey: "Owner",
             header: ({ column }) => {
                 return (
-                    <div className="hover:cursor-pointer" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+                    <div className="line-clamp-1 hover:cursor-pointer" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
                         Owner
                     </div>
                 )
             },
             cell: ({ row }) => {
-                return <div className="text-left font-medium">Me</div>
+                return <div className="line-clamp-1 text-left font-medium">Me</div>
             },
         },
         {
             id: "actions",
-            cell: ({ row }) => {
-                const file = row.original;
-                console.log(file);
+            cell: ({ row, table }) => {
+                const selectedRowsCount = table.getSelectedRowModel().rows.length;
+
+                const isDisabled = selectedRowsCount > 1; // Disable if more than one row is selected
+
+                if (isDisabled) {
+                    // Render a disabled placeholder instead of the dropdown
+                    return (
+                        <div className="h-8 w-8 p-0 opacity-50 cursor-not-allowed flex items-center justify-center">
+                            <MoreHorizontal className="h-4 w-4 text-gray-500" />
+                        </div>
+                    );
+                }
 
                 return (
                     <DropdownMenu>
@@ -134,7 +168,7 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
                         <DropdownMenuContent align="end">
                             {/* <DropdownMenuLabel>Actions</DropdownMenuLabel> */}
                             <DropdownMenuItem
-                                onClick={() => handleDelete(file.Key, fetchFiles)}
+                                onClick={() => handleDelete(row.original.Key, fetchFiles)}
                             >
                                 Delete
                             </DropdownMenuItem>

@@ -57,7 +57,7 @@ export default function s4shadowplay({ Component, pageProps }) {
                 attribute="class"
                 defaultTheme="system"
                 enableSystem
-                disableTransitionOnChange
+            // disableTransitionOnChange
             >
                 <SidebarProvider defaultOpen={false}>
                     <AppSidebar />

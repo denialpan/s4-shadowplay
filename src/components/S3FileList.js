@@ -64,7 +64,7 @@ const S3FileList = ({ refreshFilesTrigger }) => {
     if (loading) return <p>Loading files...</p>;
 
     return (
-        <div>
+        <div className="p-4">
             <DataTable columns={columns(fetchFiles)} data={files} fetchFiles={fetchFiles} />
         </div>
     );
