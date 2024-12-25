@@ -60,20 +60,41 @@ export function DataTable<TData, TValue>({
     })
 
     // handle file deletion
-    const handleDelete = async (fileKey, fetchFiles) => {
-        try {
-            const response = await axios.delete('/api/file/delete', {
-                data: { fileKey },  // file key in request body
-            });
+    const handleDelete = async (row, fetchFiles) => {
 
-            if (response.status === 200) {
-                console.log(`File ${fileKey} deleted successfully`);
-                console.log("YEAH THIS IS BEING CALLED THROUGH PASSED IN FUNCTIOn")
-                fetchFiles();
+        if (Object.keys(rowSelection).length < 2) {
+            // single deletion
+            try {
+                const response = await axios.delete('/api/file/delete', {
+                    data: { fileKey: row.original.Key },  // file key in request body
+                });
+
+                if (response.status === 200) {
+                    console.log(`File ${row.original.Key} deleted successfully`);
+                    fetchFiles();
+                }
+            } catch (error) {
+                console.error(`Error deleting file ${fileKey}:`, error);
             }
-        } catch (error) {
-            console.error(`Error deleting file ${fileKey}:`, error);
+        } else {
+            // multi deletion deletion
+            try {
+                const selectedRows = Object.keys(rowSelection).map((rowId) => table.getRow(rowId).original.Key);
+
+                const response = await axios.delete('/api/file/delete', {
+                    data: { fileKeys: selectedRows },  // file key in request body
+                });
+
+                if (response.status === 200) {
+                    console.log(`File ${selectedRows} deleted successfully`);
+                    fetchFiles();
+                }
+            } catch (error) {
+                console.error(`Error deleting files ${selectedRows}:`, error);
+            }
         }
+
+        table.resetRowSelection();
     };
 
     return (
@@ -125,18 +146,18 @@ export function DataTable<TData, TValue>({
                                             }
 
                                         }}
-                                        className={`desaturate select-none cursor-pointer ${row.getIsSelected() ? "bg-stone-400 dark:bg-stone-700" : ""
-                                            }`}
+                                        className={`desaturate select - none cursor - pointer ${row.getIsSelected() ? "bg-stone-400 dark:bg-stone-700" : ""
+                                            } `}
                                     >
                                         {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id} className="p-0 pl-2">
+                                            <TableCell key={cell.id} className="select-none p-0 pl-2">
                                                 {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                             </TableCell>
                                         ))}
                                     </TableRow>
                                 </ContextMenuTrigger>
                                 <ContextMenuContent>
-                                    <ContextMenuItem onClick={() => handleDelete(row.original.Key, fetchFiles)}>Delete</ContextMenuItem>
+                                    <ContextMenuItem onClick={() => handleDelete(row, fetchFiles)}>Delete</ContextMenuItem>
                                     <ContextMenuSeparator />
                                     <ContextMenuItem>Edit</ContextMenuItem>
                                 </ContextMenuContent>
