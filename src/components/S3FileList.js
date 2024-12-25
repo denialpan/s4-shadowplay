@@ -32,17 +32,7 @@ const S3FileList = ({ refreshFilesTrigger }) => {
         try {
             const res = await axios.get('/api/file/retrieve');
             const conditional = res.data.files || [];
-            console.log(conditional);
-
             setFiles(conditional);
-            setFiles((prevFiles) =>
-                prevFiles.map((file) => ({
-                    ...file, // Copy the existing properties
-                    LastModified: formatDate(file.LastModified),
-                    Size: formatFileSize(file.Size),
-                    Owner: "DREW GETTING ON TIKTOK", // Add the new "Owner" property
-                }))
-            );
 
         } catch (err) {
             console.error('Error fetching S3 files', err);
@@ -75,17 +65,7 @@ const S3FileList = ({ refreshFilesTrigger }) => {
 
     return (
         <div>
-            {/* <ul>
-                {files.map((file, index) => (
-                    <li key={index}>
-                        {file.Key} - {formatFileSize(file.Size)}
-                        <button onClick={() => handleDelete(file.Key)} style={{ marginLeft: '10px' }}>
-                            [x]
-                        </button>
-                    </li>
-                ))}
-            </ul> */}
-            <DataTable columns={columns} data={files} />
+            <DataTable columns={columns(fetchFiles)} data={files} fetchFiles={fetchFiles} />
         </div>
     );
 };

@@ -67,7 +67,7 @@ export function AppSidebar() {
                             ))}
                             <SidebarMenuItem key="signout">
                                 <SidebarMenuButton asChild>
-                                    <div onClick={handleSignOut}>
+                                    <div className="hover:bg-red-600 cursor-pointer" onClick={handleSignOut}>
                                         <ArrowLeftFromLine />
                                         <span>Sign out</span>
 
