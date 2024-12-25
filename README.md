@@ -21,7 +21,7 @@ It was just a matter of creating our own interface for all this.
 ## Features
 
 Everything is in alpha, even before alpha if such a stage existed, but base functionality is here with:
-![image](https://github.com/user-attachments/assets/7bcec915-28f5-4280-9df9-73bcd19fc78b)
+![s4shadowplaypreview](https://github.com/user-attachments/assets/de4678bb-92b0-43a3-b61f-c27f6aaa94db)
 
 - Multi-file uploading and deleting to and from an AWS S3 Bucket
 - Individual file uploading progress (needs CSS)
@@ -31,7 +31,7 @@ Everything is in alpha, even before alpha if such a stage existed, but base func
 - Server-side and middleware authentication for pages and api routes
 - ~~decently presentable layout, but still needs work~~
 
-95% of UI components are from [shadcn](https://ui.shadcn.com/), great work from them.
+95% of UI components are from [shadcn](https://ui.shadcn.com/), great work from them, makes this project infinitely easier UI wise, especially for mobile view.
 
 ## Getting Started
 
