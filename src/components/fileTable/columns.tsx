@@ -83,7 +83,7 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
                 <Checkbox
                     checked={row.getIsSelected()}
                     onCheckedChange={(value) => row.toggleSelected(!!value)}
-                    onClick={(event) => { event.stopPropagation(); console.log(event) }}
+                    onClick={(event) => event.stopPropagation()}
                     aria-label="Select row"
                 />
             ),
@@ -152,18 +152,20 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
                 if (isDisabled) {
                     // Render a disabled placeholder instead of the dropdown
                     return (
-                        <div className="h-8 w-8 p-0 opacity-50 cursor-not-allowed flex items-center justify-center">
-                            <MoreHorizontal className="h-4 w-4 text-gray-500" />
-                        </div>
+
+                        <Button variant="ghost" className="h-5 p-1 m-1 opacity-25 cursor-not-allowed flex items-center justify-center">
+                            <MoreHorizontal className="h-2 w-2" />
+                        </Button>
                     );
                 }
 
                 return (
-                    <DropdownMenu modal={false}>
+
+                    <DropdownMenu modal={false} >
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
+                            <Button variant="ghost" className="h-5 p-1 m-1" onClick={(event) => { event.stopPropagation(); row.toggleSelected(true); }}>
                                 <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
+                                <MoreHorizontal className="h-2 w-2" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
