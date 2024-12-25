@@ -83,6 +83,7 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
                 <Checkbox
                     checked={row.getIsSelected()}
                     onCheckedChange={(value) => row.toggleSelected(!!value)}
+                    onClick={(event) => { event.stopPropagation(); console.log(event) }}
                     aria-label="Select row"
                 />
             ),
@@ -158,7 +159,7 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
                 }
 
                 return (
-                    <DropdownMenu>
+                    <DropdownMenu modal={false}>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
                                 <span className="sr-only">Open menu</span>

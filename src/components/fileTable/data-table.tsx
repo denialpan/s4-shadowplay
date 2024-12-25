@@ -100,7 +100,7 @@ export function DataTable<TData, TValue>({
                 <TableBody>
                     {table.getRowModel().rows?.length ? (
                         table.getRowModel().rows.map((row) => (
-                            <ContextMenu key={row.id}>
+                            <ContextMenu key={row.id} modal={false}>
                                 <ContextMenuTrigger asChild>
                                     <TableRow
                                         key={row.id}
@@ -123,6 +123,7 @@ export function DataTable<TData, TValue>({
                                                 row.toggleSelected(!row.getIsSelected());
                                                 setLastSelectedRow(row.index);
                                             }
+
                                         }}
                                         className={`desaturate select-none cursor-pointer ${row.getIsSelected() ? "bg-stone-400 dark:bg-stone-700" : ""
                                             }`}
