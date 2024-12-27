@@ -113,6 +113,13 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
                 )
             },
             cell: ({ row }) => {
+
+                if (row.original.Type === "Folder") {
+                    return (
+                        <div className="line-clamp-1 text-left font-medium">{row.original.LastModified}</div>
+                    )
+                }
+
                 return <div className="line-clamp-1 text-left font-medium">{formatFileDate(row.getValue("LastModified"))}</div>
             },
         },

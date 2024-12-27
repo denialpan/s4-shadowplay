@@ -26,24 +26,24 @@ const formatDate = (dateString) => {
 
 const S3FileList = ({ refreshFilesTrigger }) => {
     const [files, setFiles] = useState([]);
+    const [data, setData] = useState({ folders: [], files: [] })
     const [loading, setLoading] = useState(true);
 
-    const fetchFiles = async () => {
-        try {
-            const res = await axios.get('/api/file/retrieve');
-            const conditional = res.data.files || [];
-            setFiles(conditional);
+    const fetchFolderContents = async () => {
+        setLoading(true);
 
-        } catch (err) {
-            console.error('Error fetching S3 files', err);
+        const folderPath = "";
+
+        try {
+            const response = await axios.get(`/api/file/folder?folderPath=${encodeURIComponent(folderPath)}`);
+            setData(response.data);
+        } catch (error) {
+            console.error("Error fetching folder contents:", error);
+            setData({ folders: [], files: [] });
         } finally {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        fetchFiles();
-    }, [refreshFilesTrigger]);
 
     // handle file deletion
     const handleDelete = async (fileKey) => {
@@ -61,11 +61,32 @@ const S3FileList = ({ refreshFilesTrigger }) => {
         }
     };
 
+    useEffect(() => {
+        fetchFolderContents();
+    }, [refreshFilesTrigger]);
+
+    const combinedData = [
+        ...data.folders.map((folder) => ({
+            Key: folder.Key,
+            Type: "Folder",
+            Name: folder.Key.replace(/\/$/, ""),
+            Size: "-",
+            LastModified: "-",
+        })),
+        ...data.files.map((file) => ({
+            Key: file.Key,
+            Type: "File",
+            Name: file.Key.split("/").pop(),
+            Size: file.Size,
+            LastModified: file.LastModified,
+        })),
+    ];
+
     if (loading) return <p>Loading files...</p>;
 
     return (
         <div className="p-4">
-            <DataTable columns={columns(fetchFiles)} data={files} fetchFiles={fetchFiles} />
+            <DataTable columns={columns(fetchFolderContents)} data={files} fetchFiles={fetchFolderContents} />
         </div>
     );
 };

@@ -58,7 +58,7 @@ export default function FolderPage() {
     return (
         <div className="p-4">
             <div>
-                <h2>Files:</h2>
+                <h2>Files in {path}:</h2>
                 <DataTable columns={columns(fetchFolderContents)} data={combinedData} />
             </div>
         </div>

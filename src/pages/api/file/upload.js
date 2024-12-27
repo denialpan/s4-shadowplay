@@ -37,7 +37,7 @@ export default async function handler(req, res) {
 
                     const params = {
                         Bucket: process.env.AWS_S3_BUCKET,
-                        Key: `uploads/${fileName}`,
+                        Key: `uploads/folder/${fileName}`,
                         Body: fileStream,
                         ContentType: fields.type[index],
                         ACL: 'public-read',

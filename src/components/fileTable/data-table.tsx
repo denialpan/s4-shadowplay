@@ -31,6 +31,8 @@ import {
     ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 
+import { useRouter } from 'next/router'
+
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[]
@@ -46,6 +48,7 @@ export function DataTable<TData, TValue>({
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [rowSelection, setRowSelection] = React.useState({})
     const [lastSelectedRow, setLastSelectedRow] = React.useState<number | null>(null);
+    const router = useRouter();
     const table = useReactTable({
         data,
         columns,
@@ -146,8 +149,13 @@ export function DataTable<TData, TValue>({
                                             }
 
                                         }}
-                                        className={`desaturate select - none cursor - pointer ${row.getIsSelected() ? "bg-stone-400 dark:bg-stone-700" : ""
+                                        className={`${row.original.Type === "Folder" ? "cursor-pointer" : ""} desaturate select - none cursor - pointer ${row.getIsSelected() ? "bg-stone-400 dark:bg-stone-700" : ""
                                             } `}
+                                        onDoubleClick={() => {
+                                            if (row.original.Type === "Folder") {
+                                                router.push(`/folder/${row.original.Name}`);
+                                            }
+                                        }}
                                     >
                                         {row.getVisibleCells().map((cell) => (
                                             <TableCell key={cell.id} className="select-none p-0 pl-2">
