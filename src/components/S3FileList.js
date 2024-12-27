@@ -49,7 +49,7 @@ const S3FileList = ({ refreshFilesTrigger }) => {
     const handleDelete = async (fileKey) => {
         try {
             const response = await axios.delete('/api/file/delete', {
-                data: { fileKey },  // file key in request body
+                data: { fileKey },
             });
 
             if (response.status === 200) {
