@@ -26,6 +26,7 @@ export default async function handler(req, res) {
             }
 
             const fileUUIDs = fields.fileUUID;
+            console.log(fields.path);
 
             // Process each file
             await Promise.all(
@@ -37,7 +38,7 @@ export default async function handler(req, res) {
 
                     const params = {
                         Bucket: process.env.AWS_S3_BUCKET,
-                        Key: `uploads/folder/${fileName}`,
+                        Key: (fields.path !== undefined) ? `${fields.path[0]}/${fileName}` : `${fileName}`, // Use prefix only if path exists
                         Body: fileStream,
                         ContentType: fields.type[index],
                         ACL: 'public-read',
