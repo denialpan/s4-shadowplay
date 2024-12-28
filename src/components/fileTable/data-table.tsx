@@ -44,6 +44,7 @@ export function DataTable<TData, TValue>({
     columns,
     data,
     fetchFiles,
+    onDragStart,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [rowSelection, setRowSelection] = React.useState({})
@@ -61,6 +62,15 @@ export function DataTable<TData, TValue>({
             rowSelection,
         },
     })
+
+    const handleDragStart = (row) => {
+        // Collect all selected files or just the dragged file
+        const selectedFiles = Object.keys(rowSelection).length
+            ? Object.keys(rowSelection).map((rowId) => table.getRow(rowId).original)
+            : [row.original];
+
+        onDragStart(selectedFiles);
+    };
 
     // handle file deletion
     const handleDelete = async (row, fetchFiles) => {
@@ -129,6 +139,10 @@ export function DataTable<TData, TValue>({
                                     <TableRow
                                         key={row.id}
                                         data-state={row.getIsSelected()}
+                                        draggable={row.original.Type === "File"} // Only files are draggable
+                                        onDragStart={() => handleDragStart(row)}
+                                        onDrop={row.original.Type === "Folder" ? row.original.onDrop : undefined}
+                                        onDragOver={row.original.Type === "Folder" ? row.original.onDragOver : undefined}
                                         onClick={(event) => {
                                             if (event.shiftKey && lastSelectedRow !== null) {
                                                 // Shift + Click logic: Select range of rows

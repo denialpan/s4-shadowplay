@@ -11,6 +11,7 @@ export default function FolderPage() {
 
     const [data, setData] = useState({ folders: [], files: [] });
     const [loading, setLoading] = useState(true);
+    const [draggedFiles, setDraggedFiles] = useState([]);
 
 
     const fetchFolderContents = async () => {
@@ -34,6 +35,23 @@ export default function FolderPage() {
         fetchFolderContents();
     }, [path]);
 
+    const handleDragStart = (file) => {
+        setDraggedFiles(file);
+    };
+
+    const handleDragOver = (event) => {
+        event.preventDefault(); // Allow dropping
+    };
+
+    const handleDropOnFolder = (folder) => {
+        if (draggedFiles.length === 0) return;
+
+        console.log(`Files moved to folder "${folder.Key}":`, draggedFiles);
+
+        // Reset dragged files
+        setDraggedFiles([]);
+    };
+
     const combinedData = [
         ...data.folders.map((folder) => ({
             Key: folder.Key,
@@ -41,6 +59,8 @@ export default function FolderPage() {
             Name: folder.Key.replace(/\/$/, ""),
             Size: "-",
             LastModified: "-",
+            onDrop: () => handleDropOnFolder(folder),
+            onDragOver: (event) => handleDragOver(event),
         })),
         ...data.files.map((file) => ({
             Key: file.Key,
@@ -48,6 +68,7 @@ export default function FolderPage() {
             Name: file.Key.split("/").pop(),
             Size: file.Size,
             LastModified: file.LastModified,
+            onDragStart: () => handleDragStart(file),
         })),
     ];
 
@@ -59,7 +80,7 @@ export default function FolderPage() {
         <div className="p-4">
             <div>
                 <h2>Files in {path}:</h2>
-                <DataTable columns={columns(fetchFolderContents)} data={combinedData} />
+                <DataTable columns={columns(fetchFolderContents)} data={combinedData} onDragStart={handleDragStart} />
             </div>
         </div>
     );
