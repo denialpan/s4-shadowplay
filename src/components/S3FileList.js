@@ -32,11 +32,9 @@ const S3FileList = ({ refreshFilesTrigger }) => {
     const fetchFolderContents = async () => {
         setLoading(true);
 
-        const folderPath = "";
-
         try {
-            const response = await axios.get(`/api/file/folder?folderPath=${encodeURIComponent(folderPath)}`);
-            setData(response.data);
+            const response = await axios.get('/api/file/folder?folderPath=');
+            setData(response.data)
         } catch (error) {
             console.error("Error fetching folder contents:", error);
             setData({ folders: [], files: [] });
@@ -82,11 +80,11 @@ const S3FileList = ({ refreshFilesTrigger }) => {
         })),
     ];
 
-    if (loading) return <p>Loading files...</p>;
+    if (loading) return <p className="p-4">Loading files...</p>;
 
     return (
         <div className="p-4">
-            <DataTable columns={columns(fetchFolderContents)} data={files} fetchFiles={fetchFolderContents} />
+            <DataTable columns={columns(fetchFolderContents)} data={combinedData} fetchFiles={fetchFolderContents} />
         </div>
     );
 };

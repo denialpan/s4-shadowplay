@@ -24,7 +24,7 @@ body {
 }
 
 .desaturate:hover {
-  filter: brightness(80%);
+  filter: invert(10%);
 }
 
 @layer base {

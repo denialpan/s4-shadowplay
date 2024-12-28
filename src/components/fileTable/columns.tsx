@@ -113,14 +113,11 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
                 )
             },
             cell: ({ row }) => {
-
-                if (row.original.Type === "Folder") {
-                    return (
-                        <div className="line-clamp-1 text-left font-medium">{row.original.LastModified}</div>
-                    )
-                }
-
-                return <div className="line-clamp-1 text-left font-medium">{formatFileDate(row.getValue("LastModified"))}</div>
+                return (
+                    <div className="line-clamp-1 text-left font-medium">
+                        {(row.original.Type === "Folder") ? row.getValue("LastModified") : formatFileDate(row.getValue("LastModified"))}
+                    </div>
+                )
             },
         },
         {
@@ -133,7 +130,11 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
                 )
             },
             cell: ({ row }) => {
-                return <div className="w-20 line-clamp-1 text-left font-medium">{formatFileSize(row.getValue("Size"))}</div>
+                return (
+                    <div className="w-20 line-clamp-1 text-left font-medium">
+                        {(row.original.Type === "Folder") ? row.original.Size : formatFileSize(row.original.Size)}
+                    </div>
+                )
             },
         },
         {
