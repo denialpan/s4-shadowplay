@@ -1,5 +1,5 @@
 import argon2 from 'argon2';
-import { connectUser } from '../../../../database/connect';
+import { connectFileSystem } from '../../../../database/connect';
 
 export default async function handler(req, res) {
 
@@ -10,7 +10,7 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Username and password are required.' });
         }
 
-        const db = connectUser();
+        const db = connectFileSystem();
 
         try {
             // Hash the password using Argon2

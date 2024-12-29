@@ -1,9 +1,9 @@
 const sqlite3 = require('sqlite3').verbose();
 
-const connectUser = () => {
-    return new sqlite3.Database('./database/users.db');
+const connectFileSystem = () => {
+    return new sqlite3.Database('./database/filesystem.db');
 }
 
 module.exports = {
-    connectUser
+    connectFileSystem
 }

@@ -1,6 +1,6 @@
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
-import { connectUser } from '../../../../database/connect';
+import { connectFileSystem } from '../../../../database/connect';
 
 const JWT_KEY = process.env.JWT_SECRET;
 
@@ -16,7 +16,7 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Username and password are required.' });
         }
 
-        const db = connectUser();
+        const db = connectFileSystem();
 
         try {
             const user = await new Promise((resolve, reject) => {

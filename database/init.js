@@ -29,10 +29,11 @@ const initializeDatabase = async () => {
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
                     parent_id TEXT,
-                    owner TEXT,
+                    owner INTEGER,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     modified_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (parent_id) REFERENCES folders (id) ON DELETE CASCADE
+                    FOREIGN KEY (owner) REFERENCES users (id) ON DELETE CASCADE
                 );
             `);
 
@@ -45,10 +46,11 @@ const initializeDatabase = async () => {
                     folder_id TEXT,
                     size INTEGER,
                     type TEXT,
-                    owner TEXT,
+                    owner INTEGER,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     modified_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
                     FOREIGN KEY (folder_id) REFERENCES folders (id) ON DELETE CASCADE
+                    FOREIGN KEY (owner) REFERENCES users (id) ON DELETE CASCADE
                 );   
             `)
 

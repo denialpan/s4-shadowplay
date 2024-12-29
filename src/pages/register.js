@@ -39,7 +39,6 @@ export default function RegisterPage() {
 
     return (
         <div style={{ maxWidth: '400px', margin: 'auto', padding: '1rem', textAlign: 'center' }}>
-            <h1>Register</h1>
             <form>
                 <div style={{ marginBottom: '1rem' }}>
                     <input
