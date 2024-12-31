@@ -5,12 +5,15 @@ import fs from 'fs';
 import { validate } from 'uuid';
 import validateFolderHierarchy from '@/utils/validateFolderHierarchy';
 import path from 'path';
+import { jwtVerify } from 'jose';
 
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     region: process.env.AWS_REGION,
 });
+
+const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export const config = {
     api: {
@@ -26,8 +29,23 @@ const generateTimeUUID = () => {
     return `${time}-${UUID}`;
 }
 
+
 export default async function handler(req, res) {
+
     if (req.method === 'POST') {
+        let username = "";
+        if (req.cookies.authToken) {
+            try {
+                const { payload } = await jwtVerify(req.cookies.authToken, secret);
+                username = payload.username;
+            } catch (error) {
+                console.error('Invalid or expired token:', error);
+            }
+        } else {
+            res.status(403).json({ message: "Not authenticated." });
+            return;
+        }
+
         const form = new multiparty.Form();
 
         form.parse(req, async (err, fields, files) => {
@@ -57,7 +75,7 @@ export default async function handler(req, res) {
                     try {
                         db.run(
                             `INSERT INTO files (id, s3_key, name, folder_id, size, type, file_extension, owner) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                            [fileUUID, "DREW S3 KEY", fileName, folderId, file.size, fileType, fileExtension, "DREW"],
+                            [fileUUID, "DREW S3 KEY", fileName, folderId, file.size, fileType, fileExtension, username],
                             function (err) {
                                 if (err) {
                                     console.error('Error creating file:', err.message);

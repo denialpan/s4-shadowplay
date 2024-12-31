@@ -17,7 +17,6 @@ export async function middleware(req) {
         if (token) {
             try {
                 await jwtVerify(token, secret);
-                response.headers.set('X-User-Authenticated', 'true');
                 return NextResponse.redirect(new URL('/', nextUrl.origin));
             } catch (error) {
                 console.error('Invalid or expired token:', error);

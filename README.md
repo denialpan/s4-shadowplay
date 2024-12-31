@@ -134,6 +134,7 @@ This section helps to summarize everything that I have learned from solely this 
 - common internet codes
   - 200 - success
   - 304 - page has not changed since last refresh/visit
+  - 403 - understood request, but i refuse
   - 404 - cannot find page/route
   - 405 - does not support method
   - 500 - internal server error

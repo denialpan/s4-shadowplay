@@ -58,10 +58,12 @@ const formatFileDate = (dateString) => {
 
 
 export type IndividualFile = {
-    Key: string
-    LastModified: string
+    Name: string
+    Type: string
     Size: number
-    Owner: "Nobody so far"
+    Owner: string
+    Created: string
+    Modified: string
 }
 
 export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
@@ -91,7 +93,7 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
             enableHiding: false,
         },
         {
-            accessorKey: "Key",
+            accessorKey: "Name",
             header: ({ column }) => {
                 return (
                     <div className="line-clamp-1 hover:cursor-pointer" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
@@ -100,11 +102,11 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
                 )
             },
             cell: ({ row }) => {
-                return <div className="truncate text-left font-medium">{row.getValue("Key")}</div>
+                return <div className="truncate text-left font-medium">{row.getValue("Name")}</div>
             },
         },
         {
-            accessorKey: "LastModified",
+            accessorKey: "Modified",
             header: ({ column }) => {
                 return (
                     <div className="line-clamp-1 hover:cursor-pointer" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
@@ -115,7 +117,7 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
             cell: ({ row }) => {
                 return (
                     <div className="line-clamp-1 text-left font-medium">
-                        {(row.original.Type === "Folder") ? row.getValue("LastModified") : formatFileDate(row.getValue("LastModified"))}
+                        {formatFileDate(row.getValue("Modified"))}
                     </div>
                 )
             },
@@ -132,7 +134,7 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
             cell: ({ row }) => {
                 return (
                     <div className="w-20 line-clamp-1 text-left font-medium">
-                        {(row.original.Type === "Folder") ? row.original.Size : formatFileSize(row.original.Size)}
+                        {(row.original.RowType === "Folder") ? row.original.Size : formatFileSize(row.original.Size)}
                     </div>
                 )
             },
@@ -147,7 +149,7 @@ export const columns = (fetchFiles): ColumnDef<IndividualFile>[] => {
                 )
             },
             cell: ({ row }) => {
-                return <div className="line-clamp-1 text-left font-medium">Me</div>
+                return <div className="line-clamp-1 text-left font-medium">{row.getValue("Owner")}</div>
             },
         },
         {

@@ -14,6 +14,8 @@ import {
     ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 
+axios.defaults.withCredentials = true;
+
 const AllFileInteraction = ({ path }) => {
 
     // display table consts
@@ -42,7 +44,6 @@ const AllFileInteraction = ({ path }) => {
                     folderPath: folderPath,
                 }
             });
-            console.log("DREW");
 
             console.log(response.data);
             setData(response.data || []);
@@ -85,16 +86,24 @@ const AllFileInteraction = ({ path }) => {
 
     const combinedData = [
         ...data.subFolders.map((folder) => ({
-            Key: folder.name,
-            Type: "Folder",
+            Name: folder.name,
+            Type: "-",
             Size: "-",
-            LastModified: "-",
+            Owner: folder.owner,
+            Created: folder.created_at,
+            Modified: folder.modified_at,
+
+            RowType: "Folder",
         })),
         ...data.subFiles.map((file) => ({
-            Key: file.name,
-            Type: "File",
+            Name: file.name,
+            Type: file.type,
             Size: file.size,
-            LastModified: file.modified_at,
+            Owner: file.owner,
+            Created: file.created_at,
+            Modified: file.modified_at,
+
+            RowType: "File",
         })),
     ];
 
@@ -135,6 +144,7 @@ const AllFileInteraction = ({ path }) => {
 
         confirmedFiles.forEach(async (fileObject) => {
 
+            console.log(fileObject);
             if (fileObject.file.size === 0) {
                 console.log("NICK");
                 setFiles((prevFiles) =>
@@ -142,7 +152,6 @@ const AllFileInteraction = ({ path }) => {
                 );
                 return;
             }
-
             const formData = new FormData();
             formData.append('file', fileObject.file);
             formData.append('name', fileObject.file.name);
