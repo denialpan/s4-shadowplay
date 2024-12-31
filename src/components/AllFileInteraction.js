@@ -1,17 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import generateTimeUUID from '@/utils/generateTimeUUID';
 import axios from 'axios';
 import { useRouter } from 'next/router';
 
 import { columns, IndividualFile } from './fileTable/columns';
 import { DataTable } from './fileTable/data-table';
 
+import {
+    ContextMenu,
+    ContextMenuContent,
+    ContextMenuItem,
+    ContextMenuSeparator,
+    ContextMenuTrigger,
+} from "@/components/ui/context-menu"
+
 const AllFileInteraction = ({ path }) => {
 
     // display table consts
     const [files, setFiles] = useState([]);
-    const [data, setData] = useState({ folders: [], files: [] })
+    const [data, setData] = useState({ subFiles: [], subFolders: [] })
     const [loading, setLoading] = useState(true);
+    const [valid, setValid] = useState(true);
 
     // upload files consts
     const [uploadFiles, setUploadFiles] = useState([]);
@@ -27,10 +36,19 @@ const AllFileInteraction = ({ path }) => {
         }
 
         try {
-            const response = await axios.get(`/api/file/folder?folderPath=${encodeURIComponent(folderPath)}`);
-            setData(response.data)
+            // const response = await axios.get(`/api/file/retrieve?folderPath=${encodeURIComponent(folderPath)}`);
+            const response = await axios.get(`/api/file/retrieve`, {
+                params: {
+                    folderPath: folderPath,
+                }
+            });
+            console.log("DREW");
+
+            console.log(response.data);
+            setData(response.data || []);
         } catch (error) {
             console.error("Error fetching folder contents:", error);
+            setValid(false);
             setData({ folders: [], files: [] });
         } finally {
             setLoading(false);
@@ -66,29 +84,29 @@ const AllFileInteraction = ({ path }) => {
     }, [path, uploadFiles]);
 
     const combinedData = [
-        ...data.folders.map((folder) => ({
-            Key: folder.Key,
+        ...data.subFolders.map((folder) => ({
+            Key: folder.name,
             Type: "Folder",
-            Name: folder.Key.replace(/\/$/, ""),
             Size: "-",
             LastModified: "-",
         })),
-        ...data.files.map((file) => ({
-            Key: file.Key,
+        ...data.subFiles.map((file) => ({
+            Key: file.name,
             Type: "File",
-            Name: file.Key.split("/").pop(),
-            Size: file.Size,
-            LastModified: file.LastModified,
+            Size: file.size,
+            LastModified: file.modified_at,
         })),
     ];
 
     // upload 
 
-    const handleFiles = (selectedFiles) => {
-        const filesWithUUIDs = Array.from(selectedFiles).map((file) => ({
-            file,
-            fileUUID: uuidv4(), // unique uuid for file
-        }));
+    const handleFiles = async (selectedFiles) => {
+        const filesWithUUIDs = await Promise.all(
+            Array.from(selectedFiles).map(async (file) => ({
+                file,
+                fileUUID: await generateTimeUUID(), // Assuming generateTimeUUID is async
+            }))
+        );
         setUploadFiles((prevFiles) => [...prevFiles, ...filesWithUUIDs]);
         processUploadFiles(filesWithUUIDs);
 
@@ -166,38 +184,67 @@ const AllFileInteraction = ({ path }) => {
         });
     };
 
+    const handleNewFolder = async () => {
+        console.log("NEW FOLDER " + router.asPath);
+        let folderPath = "";
+        if (path) {
+            folderPath = Array.isArray(path) ? path.join("/") : "";
+        }
+        const response = await axios.post(`/api/file/folder`, {
+            folderPath: folderPath,
+            newFolderName: "drew",
+        });
+    }
+
 
     if (loading) return <p className="p-4">Loading files...</p>;
 
     return (
+
         <div className="p-4">
-            <div
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-                style={{
-                    border: '2px dashed #ccc',
-                    borderRadius: '0px',
-                    padding: '20px',
-                    marginBlock: '20px',
-                    textAlign: 'center',
-                }}>
 
-                <input type="file" multiple onChange={manualFileUpload} />
+            {(!valid) ? (
+                <div> This directory doesn't exist. </div>
+            ) : (
+                <div>
+                    <ContextMenu>
+                        <ContextMenuTrigger>Right click</ContextMenuTrigger>
+                        <ContextMenuContent>
+                            <ContextMenuItem onClick={() => handleNewFolder()}>new folder</ContextMenuItem>
+                        </ContextMenuContent>
+                    </ContextMenu>
+                    <div
+                        onDragOver={handleDragOver}
+                        onDrop={handleDrop}
+                        style={{
+                            border: '2px dashed #ccc',
+                            borderRadius: '0px',
+                            padding: '20px',
+                            marginBlock: '20px',
+                            textAlign: 'center',
+                        }}>
 
-                <ul>
-                    {uploadFiles.map(({ file, fileUUID }) => (
-                        <li key={fileUUID}>
-                            <p>{file.name}</p>
-                            <p>Client-to-Backend Progress: {uploadProgress[fileUUID] || 0}%</p>
-                            <p>Backend-to-S3 Progress: {s3Progress[fileUUID] || 0}%</p>
-                        </li>
-                    ))}
-                </ul>
+                        <input type="file" multiple onChange={manualFileUpload} />
 
-            </div>
+                        <ul>
+                            {uploadFiles.map(({ file, fileUUID }) => (
+                                <li key={fileUUID}>
+                                    <p>{file.name}</p>
+                                    <p>Client-to-Backend Progress: {uploadProgress[fileUUID] || 0}%</p>
+                                    <p>Backend-to-S3 Progress: {s3Progress[fileUUID] || 0}%</p>
+                                </li>
+                            ))}
+                        </ul>
 
-            <DataTable columns={columns(fetchFolderContents)} data={combinedData} fetchFiles={fetchFolderContents} />
-        </div>
+                    </div>
+
+                    <DataTable columns={columns(fetchFolderContents)} data={combinedData} fetchFiles={fetchFolderContents} />
+                </div>
+            )
+            }
+
+
+        </div >
     );
 };
 

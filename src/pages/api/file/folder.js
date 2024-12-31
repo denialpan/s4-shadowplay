@@ -1,41 +1,41 @@
-import AWS from "aws-sdk";
-import S3Client from "@/utils/S3Client";
-
-const s3 = S3Client;
+import validateFolderHierarchy from "@/utils/validateFolderHierarchy";
+import generateTimeUUID from "@/utils/generateTimeUUID";
+import { connectFileSystem } from "../../../../database/connect";
 
 export default async function handler(req, res) {
-    const { folderPath } = req.query; // Extract folder path from query
 
-    // Default to the root directory if no folderPath is provided
-    const folderKey = folderPath ? `${folderPath}/` : "";
+    // create new folder in parent directory
+    if (req.method === "POST") {
 
-    const params = {
-        Bucket: "s4-shadowplay",
-        Prefix: folderKey, // Query objects with the folderPath as prefix
-        Delimiter: "/",    // Group objects into folders
-    };
+        const { folderPath, newFolderName } = req.body;
+        console.log(folderPath + " " + newFolderName);
+        const db = connectFileSystem();
 
-    try {
-        const data = await s3.listObjectsV2(params).promise();
+        try {
+            const parentId = await validateFolderHierarchy(folderPath.split('/').filter((segment) => segment.trim() !== ''));
+            const folderId = await generateTimeUUID();
 
-        // Map folder prefixes
-        const folders = data.CommonPrefixes?.map((cp) => ({
-            Key: cp.Prefix,
-        })) || [];
+            db.run(
+                `INSERT INTO folders (id, name, parent_id) VALUES (?, ?, ?)`,
+                [folderId, newFolderName, parentId],
+                function (err) {
+                    if (err) {
+                        console.error('Error creating folder:', err.message);
+                    } else {
+                        console.log('Folder created successfully:', folderId);
+                    }
+                }
+            );
 
-        // Map file details
-        const files = data.Contents?.map((content) => ({
-            Key: content.Key,
-            LastModified: content.LastModified,
-            Size: content.Size,
-        })) || [];
+            res.status(201).json({ message: 'Folder created successfully.' })
 
-        res.status(200).json({
-            folders, // Return folders as an array of objects
-            files,   // Return files with details
-        });
-    } catch (error) {
-        console.error("S3 Error:", error);
-        res.status(500).json({ error: "Failed to retrieve folder contents" });
+        } catch (error) {
+            console.error('Error creating folder:', error.message);
+            res.status(500).json({ error: 'Internal server error.' });
+        } finally {
+            db.close();
+        }
+
     }
+
 }

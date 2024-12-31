@@ -1,37 +1,93 @@
+import AWS from "aws-sdk";
 import S3Client from "@/utils/S3Client";
-import jwt from 'jsonwebtoken';
-// import { parse } from 'cookie';
+import { connectFileSystem } from "../../../../database/connect";
+import validateFolderHierarchy from "@/utils/validateFolderHierarchy";
 
-const JWT_KEY = process.env.JWT_SECRET;
+const s3 = S3Client;
 
 export default async function handler(req, res) {
+    const { folderPath } = req.query; // Extract folder path from query
 
-    const s3 = S3Client;
+    // Default to the root directory if no folderPath is provided
+    const folderKey = folderPath ? `${folderPath}/` : "";
 
-    if (req.method === 'GET') {
+    const params = {
+        Bucket: "s4-shadowplay",
+        Prefix: folderKey, // Query objects with the folderPath as prefix
+        Delimiter: "/",    // Group objects into folders
+    };
 
-        const params = {
-            Bucket: process.env.AWS_S3_BUCKET,
-        };
+    const db = connectFileSystem();
+    try {
+        // const data = await s3.listObjectsV2(params).promise();
 
-        try {
+        // // Map folder prefixes
+        // const folders = data.CommonPrefixes?.map((cp) => ({
+        //     Key: cp.Prefix,
+        // })) || [];
 
-            const data = await s3.listObjectsV2(params).promise();
+        // // Map file details
+        // const files = data.Contents?.map((content) => ({
+        //     Key: content.Key,
+        //     LastModified: content.LastModified,
+        //     Size: content.Size,
+        // })) || [];
 
-            const files = data.Contents.map(file => ({
-                Key: file.Key,
-                LastModified: file.LastModified,
-                Size: file.Size,
-            }));
+        // res.status(200).json({
+        //     folders, // Return folders as an array of objects
+        //     files,   // Return files with details
+        // });
 
-            res.status(200).json({ files });
-        } catch (error) {
-            console.error('Error fetching S3 files:', error);
-            res.status(500).json({ error: 'Error fetching files from S3' });
-        }
-    } else {
-        res.setHeader('Allow', ['GET']);
-        res.status(405).end(`Method ${req.method} Not Allowed`);
+        // validate hierarchy from root 
+        // if parent is null, folder is at root directory
+        const parentId = await validateFolderHierarchy(folderPath.split('/').filter((segment) => segment.trim() !== ''));
+
+        const subFolders = await new Promise((resolve, reject) => {
+            db.all(
+                `SELECT * FROM folders WHERE parent_id = ?`,
+                [parentId],
+                (err, rows) => {
+                    if (err) {
+                        console.error('Error querying folders:', err.message);
+                        return;
+                    }
+                    resolve(rows);
+
+                }
+            )
+
+        })
+        const subFiles = await new Promise((resolve, reject) => {
+            db.all(
+                `SELECT * FROM files WHERE folder_id = ?`,
+                [parentId],
+                (err, rows) => {
+                    if (err) {
+                        console.error('Error querying folders:', err.message);
+                        return;
+                    }
+                    resolve(rows);
+
+                }
+            )
+
+        })
+
+        console.log(subFolders);
+        console.log(subFiles);
+
+        res.status(200).json({
+            subFolders,
+            subFiles,
+        })
+
+    } catch (error) {
+        console.error("S3 Error:", error);
+        res.status(500).json({ error: "Failed to retrieve folder contents" });
+    } finally {
+        console.log("database closed");
+        db.close();
     }
+
 
 }

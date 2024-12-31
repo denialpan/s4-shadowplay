@@ -28,12 +28,13 @@ const initializeDatabase = async () => {
                 CREATE TABLE IF NOT EXISTS folders (
                     id TEXT PRIMARY KEY,
                     name TEXT NOT NULL,
-                    parent_id TEXT,
+                    parent_id TEXT NOT NULL,
                     owner INTEGER,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     modified_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     FOREIGN KEY (parent_id) REFERENCES folders (id) ON DELETE CASCADE
                     FOREIGN KEY (owner) REFERENCES users (id) ON DELETE CASCADE
+                    UNIQUE (name, parent_id) 
                 );
             `);
 
@@ -46,11 +47,13 @@ const initializeDatabase = async () => {
                     folder_id TEXT,
                     size INTEGER,
                     type TEXT,
+                    file_extension TEXT,
                     owner INTEGER,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     modified_at DATETIME DEFAULT CURRENT_TIMESTAMP, 
                     FOREIGN KEY (folder_id) REFERENCES folders (id) ON DELETE CASCADE
                     FOREIGN KEY (owner) REFERENCES users (id) ON DELETE CASCADE
+                    UNIQUE (name, folder_id)
                 );   
             `)
 

@@ -163,11 +163,18 @@ export function DataTable<TData, TValue>({
                                             }
 
                                         }}
+                                        onContextMenu={() => {
+                                            table.resetRowSelection();
+                                            row.toggleSelected(!row.getIsSelected());
+                                            setLastSelectedRow(row.index);
+                                        }}
                                         className={`bg-slate-50 dark:bg-neutral-900 ${row.original.Type === "Folder" ? "cursor-pointer" : ""} desaturate select - none cursor - pointer ${row.getIsSelected() ? "bg-stone-400 dark:bg-stone-700" : ""
                                             } `}
                                         onDoubleClick={() => {
                                             if (row.original.Type === "Folder") {
-                                                router.push(`/folder/${row.original.Name}`);
+                                                console.log(row.original);
+                                                console.log(router);
+                                                router.push(`${router.asPath}/${row.original.Key}`);
                                             }
                                         }}
                                     >

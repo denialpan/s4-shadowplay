@@ -1,6 +1,10 @@
+import { connectFileSystem } from '../../../../database/connect';
 import AWS from 'aws-sdk';
 import multiparty from 'multiparty';
 import fs from 'fs';
+import { validate } from 'uuid';
+import validateFolderHierarchy from '@/utils/validateFolderHierarchy';
+import path from 'path';
 
 const s3 = new AWS.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -16,6 +20,12 @@ export const config = {
 
 let sseResponse = null; // Shared SSE connection
 
+const generateTimeUUID = () => {
+    const time = new Date().toISOString().replace(/[-:.TZ]/g, '');
+    const UUID = uuidv4();
+    return `${time}-${UUID}`;
+}
+
 export default async function handler(req, res) {
     if (req.method === 'POST') {
         const form = new multiparty.Form();
@@ -26,9 +36,14 @@ export default async function handler(req, res) {
             }
 
             const fileUUIDs = fields.fileUUID;
-            console.log(fields.path);
+            const db = connectFileSystem();
 
-            // Process each file
+            let folderPath = ''
+            if (fields.path !== undefined) {
+                folderPath = fields.path[0];
+            }
+            const folderId = await validateFolderHierarchy(folderPath.split('/').filter((segment) => segment.trim() !== ''));
+
             await Promise.all(
                 Object.keys(files).map(async (fileField, index) => {
                     const file = files[fileField][0];
@@ -36,35 +51,69 @@ export default async function handler(req, res) {
                     const fileUUID = fileUUIDs[index];
                     const fileStream = fs.createReadStream(file.path);
 
-                    const params = {
-                        Bucket: process.env.AWS_S3_BUCKET,
-                        Key: (fields.path !== undefined) ? `${fields.path[0]}/${fileName}` : `${fileName}`, // Use prefix only if path exists
-                        Body: fileStream,
-                        ContentType: fields.type[index],
-                        ACL: 'public-read',
-                    };
+                    const fileType = file.headers['content-type'].split('/')[0]
+                    const fileExtension = path.extname(fileName);
 
-                    const options = { partSize: 5 * 1024 * 1024, queueSize: 1 }; // Ensure chunked uploads for progress
+                    try {
+                        db.run(
+                            `INSERT INTO files (id, s3_key, name, folder_id, size, type, file_extension, owner) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                            [fileUUID, "DREW S3 KEY", fileName, folderId, file.size, fileType, fileExtension, "DREW"],
+                            function (err) {
+                                if (err) {
+                                    console.error('Error creating file:', err.message);
+                                } else {
+                                    console.log('File created successfully:', fileName);
+                                }
+                            }
+                        );
+                    } catch (error) {
 
-                    const upload = s3.upload(params, options);
+                    } finally {
+                        db.close();
+                    }
 
-                    upload.on('httpUploadProgress', (progress) => {
-                        const percentage = Math.round((progress.loaded / progress.total) * 100);
-                        console.log(`Progress for ${fileName} (UUID: ${fileUUID}): ${percentage}%`);
 
-                        // Send progress update through SSE
-                        if (sseResponse) {
-                            sseResponse.write(
-                                `data: ${JSON.stringify({ fileUUID, fileName, progress: percentage })}\n\n`
-                            );
-                            // Flush to ensure immediate delivery
-                            sseResponse.flush();
-                        }
-                    });
-
-                    await upload.promise();
                 })
-            );
+            )
+
+
+            // Process each file
+            // await Promise.all(
+            //     Object.keys(files).map(async (fileField, index) => {
+            //         const file = files[fileField][0];
+            //         const fileName = fields.name[index];
+            //         const fileUUID = fileUUIDs[index];
+            //         const fileStream = fs.createReadStream(file.path);
+
+            //         const params = {
+            //             Bucket: process.env.AWS_S3_BUCKET,
+            //             Key: (fields.path !== undefined) ? `${fields.path[0]}/${fileName}` : `${fileName}`, // Use prefix only if path exists
+            //             Body: fileStream,
+            //             ContentType: fields.type[index],
+            //             ACL: 'public-read',
+            //         };
+
+            //         const options = { partSize: 5 * 1024 * 1024, queueSize: 1 }; // Ensure chunked uploads for progress
+
+            //         const upload = s3.upload(params, options);
+
+            //         upload.on('httpUploadProgress', (progress) => {
+            //             const percentage = Math.round((progress.loaded / progress.total) * 100);
+            //             console.log(`Progress for ${fileName} (UUID: ${fileUUID}): ${percentage}%`);
+
+            //             // Send progress update through SSE
+            //             if (sseResponse) {
+            //                 sseResponse.write(
+            //                     `data: ${JSON.stringify({ fileUUID, fileName, progress: percentage })}\n\n`
+            //                 );
+            //                 // Flush to ensure immediate delivery
+            //                 sseResponse.flush();
+            //             }
+            //         });
+
+            //         await upload.promise();
+            //     })
+            // );
 
             res.status(200).json({ message: 'Files uploaded successfully!' });
         });
