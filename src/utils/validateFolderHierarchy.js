@@ -1,12 +1,12 @@
 import { connectFileSystem } from "../../database/connect";
 
 const validateFolderHierarchy = async (folderPath) => {
-    let parentId = 'root'; // Start at the root
+    let parentId = 'root';
     const db = connectFileSystem();
 
     for (const folderName of folderPath) {
         const folderId = await new Promise((resolve, reject) => {
-            // Check if the folder exists in the given parent
+
             db.get(
                 `SELECT id FROM folders WHERE name = ? AND parent_id IS ?`,
                 [folderName, parentId],
@@ -15,13 +15,14 @@ const validateFolderHierarchy = async (folderPath) => {
                     if (row) {
                         resolve(row.id); // Folder exists, return its ID
                     } else {
-                        reject(new Error(`Folder '${folderName}' does not exist in the hierarchy.`));
+                        // reject(new Error(`Folder '${folderName}' does not exist in the hierarchy.`));
+                        resolve(-1);
                     }
                 }
             );
         });
 
-        // Set the parentId for the next folder in the hierarchy
+        // iterate down to next folder
         parentId = folderId;
     }
 

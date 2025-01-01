@@ -37,23 +37,25 @@ const AllFileInteraction = ({ path }) => {
             folderPath = Array.isArray(path) ? path.join("/") : "";
         }
 
-        try {
-            // const response = await axios.get(`/api/file/retrieve?folderPath=${encodeURIComponent(folderPath)}`);
-            const response = await axios.get(`/api/file/retrieve`, {
-                params: {
-                    folderPath: folderPath,
-                }
-            });
+        await axios.get(`/api/file/retrieve`, {
+            params: {
+                folderPath: folderPath,
+            }
+        }).then((response) => {
 
             console.log(response.data);
             setData(response.data || []);
-        } catch (error) {
-            console.error("Error fetching folder contents:", error);
-            setValid(false);
-            setData({ folders: [], files: [] });
-        } finally {
+
+        }).catch(function (error) {
+
+            if (error.response) {
+                setValid(false);
+                setData({ subFolders: [], subFiles: [] });
+            }
+        }).finally(() => {
             setLoading(false);
-        }
+        });
+
     };
 
     useEffect(() => {

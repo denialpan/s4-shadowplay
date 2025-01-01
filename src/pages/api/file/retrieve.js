@@ -42,6 +42,10 @@ export default async function handler(req, res) {
         // if parent is null, folder is at root directory
         const parentId = await validateFolderHierarchy(folderPath.split('/').filter((segment) => segment.trim() !== ''));
 
+        if (parentId === -1) {
+            res.status(403).json({ error: "nope" });
+        }
+
         const subFolders = await new Promise((resolve, reject) => {
             db.all(
                 `SELECT * FROM folders WHERE parent_id = ?`,

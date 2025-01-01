@@ -57,7 +57,7 @@ export function DataTable<TData, TValue>({
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [rowSelection, setRowSelection] = React.useState({})
     const [lastSelectedRow, setLastSelectedRow] = React.useState<number | null>(null);
-    const [draggedFiles, setDraggedFiles] = React.useState([]); // Track multiple dragged files
+    const [draggedRows, setDraggedRows] = React.useState([]); // Track multiple dragged files
     const router = useRouter();
 
     const [columnVisibility, setColumnVisibility] =
@@ -83,35 +83,30 @@ export function DataTable<TData, TValue>({
             ? Object.keys(rowSelection).map((rowId) => table.getRow(rowId).original)
             : [row.original];
 
-        setDraggedFiles(selectedFileRows);
+        setDraggedRows(selectedFileRows);
         console.log("Dragging files:", selectedFileRows);
     };
 
     const handleDropOnFolder = async (folderRow, fetchFiles) => {
-        if (draggedFiles.length > 0 && folderRow.original.RowType === "Folder") {
-            console.log(
-                `Dropped files ${draggedFiles.map((file) => file.Id).join(", ")} into folder ${folderRow.original.Id
-                } + ${folderRow.original.Name}`
-            );
+
+        if (draggedRows.length > 0 && folderRow.original.RowType === "Folder") {
+
+            const folders = draggedRows.filter((row) => row.RowType === "Folder");
+            const files = draggedRows.filter((row) => row.RowType === "File");
 
             const response = await axios.post('/api/file/move', {
-                files: draggedFiles,
+                files: files,
+                folders: folders,
                 targetFolder: folderRow.original.Id,
             })
-
             console.log(response.data);
-
             fetchFiles();
-
         }
-        setDraggedFiles([]);
+        setDraggedRows([]);
     };
-
     const handleDragOver = (event) => {
         event.preventDefault();
     };
-
-
     // handle file deletion
     const handleDelete = async (row, fetchFiles) => {
 
@@ -165,7 +160,6 @@ export function DataTable<TData, TValue>({
                             (column) => column.getCanHide()
                         )
                         .map((column) => {
-
                             if (column.id !== "actions") {
                                 return (
                                     <DropdownMenuCheckboxItem
@@ -211,7 +205,7 @@ export function DataTable<TData, TValue>({
                                         <TableRow
                                             key={row.id}
                                             data-state={row.getIsSelected()}
-                                            draggable={row.original.RowType === "File"} // Only files are draggable
+                                            draggable={row.original.RowType === "File" || row.original.RowType === "Folder"} // Only files are draggable
                                             onDragStart={() => handleDragStart(row)}
                                             onDrop={
                                                 row.original.RowType === "Folder"
@@ -219,7 +213,10 @@ export function DataTable<TData, TValue>({
                                                     : undefined
                                             }
                                             onDragOver={
-                                                row.original.RowType === "Folder" ? handleDragOver : undefined
+                                                row.original.RowType === "Folder" &&
+                                                    !draggedRows.some((draggedRow) => draggedRow.Id === row.original.Id)
+                                                    ? handleDragOver
+                                                    : undefined
                                             }
                                             onClick={(event) => {
                                                 if (event.shiftKey && lastSelectedRow !== null) {

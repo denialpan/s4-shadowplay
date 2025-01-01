@@ -5,21 +5,26 @@ const s3 = S3Client;
 
 export default async function handler(req, res) {
     if (req.method === 'POST') {
-        const { files, targetFolder } = req.body;
+        const { files, folders, targetFolder } = req.body;
 
         const db = connectFileSystem();
         const fileIds = files.map((file) => file.Id);
-        const placeholders = fileIds.map(() => "?").join(",");
+        const folderIds = folders.map((folder) => folder.Id);
 
-        console.log(placeholders);
-        console.log(fileIds);
-        console.log(targetFolder);
+        const filePlaceholders = fileIds.map(() => "?").join(",");
+
+        const folderPlaceholders = folderIds.map(() => "?").join(",");
 
         try {
 
             await db.run(
-                `UPDATE files SET folder_id = ? WHERE id IN (${placeholders})`,
+                `UPDATE files SET folder_id = ? WHERE id IN (${filePlaceholders})`,
                 [targetFolder, ...fileIds]
+            );
+
+            await db.run(
+                `UPDATE folders SET parent_id = ? WHERE id IN (${folderPlaceholders})`,
+                [targetFolder, ...folderIds]
             );
 
             return res.status(200).json({
