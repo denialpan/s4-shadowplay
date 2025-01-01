@@ -18,7 +18,6 @@ s4shadowplay.getInitialProps = async (appContext) => {
     const { req } = appContext.ctx;
 
     let authData = {
-        isAuthenticated: false,
         username: null,
     }
 
@@ -28,7 +27,6 @@ s4shadowplay.getInitialProps = async (appContext) => {
             try {
                 const { payload } = await jwtVerify(token, secret);
                 authData = {
-                    isAuthenticated: true,
                     username: payload.username,
                 }
             } catch (error) {

@@ -222,6 +222,7 @@ const AllFileInteraction = ({ path }) => {
                 <div> This directory doesn't exist. </div>
             ) : (
                 <div>
+
                     <ContextMenu>
                         <ContextMenuTrigger>Right click</ContextMenuTrigger>
                         <ContextMenuContent>

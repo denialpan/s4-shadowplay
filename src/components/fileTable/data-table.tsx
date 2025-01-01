@@ -103,6 +103,7 @@ export function DataTable<TData, TValue>({
             fetchFiles();
         }
         setDraggedRows([]);
+        setRowSelection([]);
     };
     const handleDragOver = (event) => {
         event.preventDefault();
