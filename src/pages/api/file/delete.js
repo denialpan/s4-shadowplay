@@ -41,6 +41,8 @@ export default async function handler(req, res) {
 
                 const placeholders = fileIds.map(() => "?").join(","); // Create ?,?,? placeholders
                 console.log(placeholders);
+                console.log(fileIds);
+                return;
                 await db.run(`DELETE FROM files WHERE id IN (${placeholders})`,
                     fileIds,
                     (err, rows) => {

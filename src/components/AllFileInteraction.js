@@ -107,6 +107,7 @@ const AllFileInteraction = ({ path }) => {
 
             RowType: "File",
             Id: file.id,
+            Folder: file.folder_id,
         })),
     ];
 
@@ -252,9 +253,7 @@ const AllFileInteraction = ({ path }) => {
 
                     <DataTable columns={columns(fetchFolderContents)} data={combinedData} fetchFiles={fetchFolderContents} />
                 </div>
-            )
-            }
-
+            )}
 
         </div >
     );

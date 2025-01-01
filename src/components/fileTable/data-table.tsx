@@ -53,11 +53,11 @@ export function DataTable<TData, TValue>({
     columns,
     data,
     fetchFiles,
-    onDragStart,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([])
     const [rowSelection, setRowSelection] = React.useState({})
     const [lastSelectedRow, setLastSelectedRow] = React.useState<number | null>(null);
+    const [draggedFiles, setDraggedFiles] = React.useState([]); // Track multiple dragged files
     const router = useRouter();
 
     const [columnVisibility, setColumnVisibility] =
@@ -79,13 +79,38 @@ export function DataTable<TData, TValue>({
     })
 
     const handleDragStart = (row) => {
-        // Collect all selected files or just the dragged file
-        const selectedFiles = Object.keys(rowSelection).length
+        const selectedFileRows = Object.keys(rowSelection).length
             ? Object.keys(rowSelection).map((rowId) => table.getRow(rowId).original)
             : [row.original];
 
-        onDragStart(selectedFiles);
+        setDraggedFiles(selectedFileRows);
+        console.log("Dragging files:", selectedFileRows);
     };
+
+    const handleDropOnFolder = async (folderRow, fetchFiles) => {
+        if (draggedFiles.length > 0 && folderRow.original.RowType === "Folder") {
+            console.log(
+                `Dropped files ${draggedFiles.map((file) => file.Id).join(", ")} into folder ${folderRow.original.Id
+                } + ${folderRow.original.Name}`
+            );
+
+            const response = await axios.post('/api/file/move', {
+                files: draggedFiles,
+                targetFolder: folderRow.original.Id,
+            })
+
+            console.log(response.data);
+
+            fetchFiles();
+
+        }
+        setDraggedFiles([]);
+    };
+
+    const handleDragOver = (event) => {
+        event.preventDefault();
+    };
+
 
     // handle file deletion
     const handleDelete = async (row, fetchFiles) => {
@@ -140,18 +165,21 @@ export function DataTable<TData, TValue>({
                             (column) => column.getCanHide()
                         )
                         .map((column) => {
-                            return (
-                                <DropdownMenuCheckboxItem
-                                    key={column.id}
-                                    className="capitalize"
-                                    checked={column.getIsVisible()}
-                                    onCheckedChange={(value) =>
-                                        column.toggleVisibility(!!value)
-                                    }
-                                >
-                                    {column.id}
-                                </DropdownMenuCheckboxItem>
-                            )
+
+                            if (column.id !== "actions") {
+                                return (
+                                    <DropdownMenuCheckboxItem
+                                        key={column.id}
+                                        className="capitalize"
+                                        checked={column.getIsVisible()}
+                                        onCheckedChange={(value) =>
+                                            column.toggleVisibility(!!value)
+                                        }
+                                    >
+                                        {column.id}
+                                    </DropdownMenuCheckboxItem>
+                                )
+                            }
                         })}
                 </DropdownMenuContent>
             </DropdownMenu>
@@ -185,8 +213,14 @@ export function DataTable<TData, TValue>({
                                             data-state={row.getIsSelected()}
                                             draggable={row.original.RowType === "File"} // Only files are draggable
                                             onDragStart={() => handleDragStart(row)}
-                                            onDrop={row.original.RowType === "Folder" ? row.original.onDrop : undefined}
-                                            onDragOver={row.original.RowType === "Folder" ? row.original.onDragOver : undefined}
+                                            onDrop={
+                                                row.original.RowType === "Folder"
+                                                    ? () => handleDropOnFolder(row, fetchFiles)
+                                                    : undefined
+                                            }
+                                            onDragOver={
+                                                row.original.RowType === "Folder" ? handleDragOver : undefined
+                                            }
                                             onClick={(event) => {
                                                 if (event.shiftKey && lastSelectedRow !== null) {
                                                     // Shift + Click logic: Select range of rows
