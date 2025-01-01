@@ -15,7 +15,7 @@ export default async function handler(req, res) {
             const parentId = await validateFolderHierarchy(folderPath.split('/').filter((segment) => segment.trim() !== ''));
             const folderId = await generateTimeUUID();
 
-            db.run(
+            await db.run(
                 `INSERT INTO folders (id, name, parent_id) VALUES (?, ?, ?)`,
                 [folderId, newFolderName, parentId],
                 function (err) {

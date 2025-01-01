@@ -73,9 +73,6 @@ export default async function handler(req, res) {
 
         })
 
-        console.log(subFolders);
-        console.log(subFiles);
-
         res.status(200).json({
             subFolders,
             subFiles,

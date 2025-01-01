@@ -94,7 +94,7 @@ export function DataTable<TData, TValue>({
             // single deletion
             try {
                 const response = await axios.delete('/api/file/delete', {
-                    data: { fileKey: row.original.Key },  // file key in request body
+                    data: { fileId: row.original.Id },  // file key in request body
                 });
 
                 if (response.status === 200) {
@@ -107,10 +107,10 @@ export function DataTable<TData, TValue>({
         } else {
             // multi deletion deletion
             try {
-                const selectedRows = Object.keys(rowSelection).map((rowId) => table.getRow(rowId).original.Key);
+                const selectedRows = Object.keys(rowSelection).map((rowId) => table.getRow(rowId).original.Id);
 
                 const response = await axios.delete('/api/file/delete', {
-                    data: { fileKeys: selectedRows },  // file key in request body
+                    data: { fileIds: selectedRows },  // file key in request body
                 });
 
                 if (response.status === 200) {
@@ -207,18 +207,21 @@ export function DataTable<TData, TValue>({
                                                 }
 
                                             }}
-                                            onContextMenu={() => {
-                                                table.resetRowSelection();
-                                                row.toggleSelected(!row.getIsSelected());
-                                                setLastSelectedRow(row.index);
-                                            }}
+                                            // onContextMenu={() => {
+                                            //     table.resetRowSelection();
+                                            //     row.toggleSelected(true);
+                                            //     setLastSelectedRow(row.index);
+                                            // }}
                                             className={`bg-slate-50 dark:bg-neutral-900 ${row.original.RowType === "Folder" ? "cursor-pointer" : ""} desaturate select - none cursor - pointer ${row.getIsSelected() ? "bg-stone-400 dark:bg-stone-700" : ""
                                                 } `}
                                             onDoubleClick={() => {
                                                 if (row.original.RowType === "Folder") {
-                                                    console.log(row.original);
-                                                    console.log(router);
-                                                    router.push(`${router.asPath}/${row.original.Key}`);
+
+                                                    if (row.original.Parent === 'root') {
+                                                        router.push(`${router.asPath}/folder/${row.original.Name}`);
+                                                    } else {
+                                                        router.push(`${router.asPath}/${row.original.Name}`);
+                                                    }
                                                 }
                                             }}
                                         >

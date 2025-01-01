@@ -94,6 +94,8 @@ const AllFileInteraction = ({ path }) => {
             Modified: folder.modified_at,
 
             RowType: "Folder",
+            Id: folder.id,
+            Parent: folder.parent_id,
         })),
         ...data.subFiles.map((file) => ({
             Name: file.name,
@@ -104,6 +106,7 @@ const AllFileInteraction = ({ path }) => {
             Modified: file.modified_at,
 
             RowType: "File",
+            Id: file.id,
         })),
     ];
 
