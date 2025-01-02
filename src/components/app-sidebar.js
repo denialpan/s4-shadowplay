@@ -20,6 +20,13 @@ import {
     DropdownMenuItem,
 } from "@/components/ui/dropdown-menu"
 
+import {
+    Accordion,
+    AccordionContent,
+    AccordionItem,
+    AccordionTrigger,
+} from "@/components/ui/accordion"
+
 import { Button } from "./ui/button"
 
 import { useRouter } from "next/router"
@@ -48,14 +55,19 @@ export function AppSidebar() {
 
     // Component to render the folder hierarchy
     const FolderTree = ({ tree = [] }) => (
-        <ul>
+
+        <div>
             {tree.map(folder => (
-                <li key={folder.id} className="p-4">
-                    {folder.name}
-                    {folder.children.length > 0 && <FolderTree tree={folder.children} />}
-                </li>
+                <Accordion type="single" collapsible key={folder.id} className="ml-2 pl-1 border-l-2">
+                    <AccordionItem value="item-1">
+                        <AccordionTrigger>{folder.name}</AccordionTrigger>
+                        <AccordionContent>
+                            {folder.children.length > 0 && <FolderTree tree={folder.children} />}
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
             ))}
-        </ul>
+        </div>
     );
 
     const getHierarchy = async () => {
@@ -99,18 +111,29 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent >
-                <div>
-                    <h1>Folder Hierarchy</h1>
-                    <FolderTree tree={hierarchy} />
-                </div>
+                <SidebarMenu>
+                    <div className="p-2">
+                        <Accordion type="single" collapsible key="root" className="pl-1">
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger> / </AccordionTrigger>
+                                <AccordionContent>
+                                    <FolderTree tree={hierarchy} />
+
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+
+                    </div>
+                </SidebarMenu>
+
+
+
             </SidebarContent>
             <SidebarFooter>
                 <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton onClick={() => { handleSignOut() }} className="hover:bg-red-600 hover:text-white">
-                            Sign out
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
+                    <SidebarMenuButton onClick={() => { handleSignOut() }} className="hover:bg-red-600 hover:text-white">
+                        Sign out
+                    </SidebarMenuButton>
                 </SidebarMenu>
             </SidebarFooter>
         </Sidebar>
