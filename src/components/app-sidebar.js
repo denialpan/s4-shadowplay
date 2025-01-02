@@ -1,37 +1,36 @@
-import { Folder, Settings, ArrowLeftFromLine } from "lucide-react"
+import { Folder, Settings, ArrowLeftFromLine, ChevronDown, ChevronUp } from "lucide-react"
 
 import {
     Sidebar,
     SidebarContent,
+    SidebarFooter,
     SidebarGroup,
     SidebarGroupContent,
     SidebarGroupLabel,
+    SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
 } from "@/components/ui/sidebar"
+
+import {
+    DropdownMenu,
+    DropdownMenuTrigger,
+    DropdownMenuContent,
+    DropdownMenuItem,
+} from "@/components/ui/dropdown-menu"
+
+import { Button } from "./ui/button"
+
 import { useRouter } from "next/router"
 import { useAuth } from "@/contexts/authContext";
+import { useEffect, useState } from 'react'
 import axios from "axios";
-
-// Menu items.
-const items = [
-    {
-        title: "root /",
-        url: "/",
-        icon: Folder,
-    },
-    {
-        title: "Settings",
-        url: "/sohos",
-        icon: Settings,
-    },
-]
-
 
 export function AppSidebar() {
     const router = useRouter();
     const { authData, setAuthData } = useAuth();
+    const [hierarchy, setHierarchy] = useState();
 
     const handleSignOut = async () => {
         try {
@@ -47,38 +46,74 @@ export function AppSidebar() {
         }
     };
 
+    // Component to render the folder hierarchy
+    const FolderTree = ({ tree = [] }) => (
+        <ul>
+            {tree.map(folder => (
+                <li key={folder.id} className="p-4">
+                    {folder.name}
+                    {folder.children.length > 0 && <FolderTree tree={folder.children} />}
+                </li>
+            ))}
+        </ul>
+    );
+
+    const getHierarchy = async () => {
+        const response = await axios.get('/api/file/hierarchy');
+
+        const folders = response.data.allFolders;
+        const folderMap = {};
+        const rootFolders = [];
+
+        // Create mapping of folder IDs and initialize children array
+        folders.forEach(folder => {
+            folderMap[folder.id] = { ...folder, children: [] };
+        });
+
+        // Build the tree structure iteratively
+        folders.forEach(folder => {
+            if (folder.parent_id === 'root') {
+                rootFolders.push(folderMap[folder.id]);
+            } else if (folderMap[folder.parent_id]) {
+                folderMap[folder.parent_id].children.push(folderMap[folder.id]);
+            }
+        });
+
+        console.log(rootFolders);
+        setHierarchy(rootFolders);
+    }
+
+    useEffect(() => {
+        getHierarchy();
+    }, [router.pathname])
+
     return (
         <Sidebar>
-            <SidebarContent>
-                <SidebarGroup>
-                    <SidebarGroupLabel>s4-shadowplay | {authData.username}</SidebarGroupLabel>
-                    <SidebarGroupContent>
-                        <SidebarMenu>
-                            {items.map((item) => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton asChild>
-                                        <div className="hover:cursor-pointer" onClick={() => { router.push(item.url) }}>
-                                            <item.icon />
-                                            <span>{item.title}</span>
-                                        </div>
-
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
-                            <SidebarMenuItem key="signout">
-                                <SidebarMenuButton asChild>
-                                    <div className="hover:bg-red-600 cursor-pointer" onClick={handleSignOut}>
-                                        <ArrowLeftFromLine />
-                                        <span>Sign out</span>
-
-                                    </div>
-
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                        </SidebarMenu>
-                    </SidebarGroupContent>
-                </SidebarGroup>
+            <SidebarHeader >
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarGroupLabel>
+                            s4-shadowplay | {authData.username}
+                        </SidebarGroupLabel>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarHeader>
+            <SidebarContent >
+                <div>
+                    <h1>Folder Hierarchy</h1>
+                    <FolderTree tree={hierarchy} />
+                </div>
             </SidebarContent>
+            <SidebarFooter>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton onClick={() => { handleSignOut() }} className="hover:bg-red-600 hover:text-white">
+                            Sign out
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarFooter>
         </Sidebar>
+
     )
 }

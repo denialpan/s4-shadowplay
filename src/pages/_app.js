@@ -4,7 +4,7 @@ import App from "next/app";
 import Header from "@/components/header";
 import { jwtVerify } from "jose";
 import { AuthProvider } from "@/contexts/authContext";
-
+import { useRouter } from "next/router";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -47,7 +47,7 @@ s4shadowplay.getInitialProps = async (appContext) => {
 export default function s4shadowplay({ Component, pageProps }) {
 
     const { authData } = pageProps;
-
+    const router = useRouter();
     return (
 
         <AuthProvider initialAuthData={authData}>
@@ -57,13 +57,21 @@ export default function s4shadowplay({ Component, pageProps }) {
                 enableSystem
             // disableTransitionOnChange
             >
-                <SidebarProvider defaultOpen={false}>
-                    <AppSidebar />
+                {router.pathname === "/login" ? (
                     <div className="flex-1 overflow-y-auto">
                         <Header />
                         <Component {...pageProps} />
                     </div>
-                </SidebarProvider>
+                ) : (
+                    <SidebarProvider defaultOpen={false}>
+                        <AppSidebar />
+                        <div className="flex-1 overflow-y-auto">
+                            <Header />
+                            <Component {...pageProps} />
+                        </div>
+                    </SidebarProvider>
+                )}
+
             </ThemeProvider>
 
         </AuthProvider>
