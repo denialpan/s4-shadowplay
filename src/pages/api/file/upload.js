@@ -60,6 +60,9 @@ export default async function handler(req, res) {
             if (fields.path !== undefined) {
                 folderPath = fields.path[0];
             }
+
+            folderPath = decodeURIComponent(folderPath);
+
             const folderId = await validateFolderHierarchy(folderPath.split('/').filter((segment) => segment.trim() !== ''));
 
             await Promise.all(

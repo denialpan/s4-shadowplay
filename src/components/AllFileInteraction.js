@@ -207,7 +207,7 @@ const AllFileInteraction = ({ path }) => {
         }
         const response = await axios.post(`/api/file/folder`, {
             folderPath: folderPath,
-            newFolderName: "drew",
+            newFolderName: "this is a test with spaces",
         });
     }
 

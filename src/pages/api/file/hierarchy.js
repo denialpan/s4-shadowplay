@@ -1,7 +1,6 @@
 import AWS from "aws-sdk";
 import S3Client from "@/utils/S3Client";
 import { connectFileSystem } from "../../../../database/connect";
-import validateFolderHierarchy from "@/utils/validateFolderHierarchy";
 
 const s3 = S3Client;
 
