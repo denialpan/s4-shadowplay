@@ -63,7 +63,7 @@ export default function s4shadowplay({ Component, pageProps }) {
                         <Component {...pageProps} />
                     </div>
                 ) : (
-                    <SidebarProvider defaultOpen={false}>
+                    <SidebarProvider >
                         <AppSidebar />
                         <div className="flex-1 overflow-y-auto">
                             <Header />

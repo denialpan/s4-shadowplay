@@ -33,8 +33,23 @@ export default async function handler(req, res) {
 
         })
 
+        const allFiles = await new Promise((resolve, reject) => {
+            db.all(
+                `SELECT * FROM files`,
+                (err, rows) => {
+                    if (err) {
+                        console.error('Error querying files:', err.message);
+                        return;
+                    }
+                    resolve(rows);
+                }
+            )
+
+        })
+
         res.status(200).json({
             allFolders,
+            allFiles,
         })
 
     } catch (error) {

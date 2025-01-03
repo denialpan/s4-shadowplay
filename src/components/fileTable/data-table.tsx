@@ -250,7 +250,7 @@ export function DataTable<TData, TValue>({
                                                 if (row.original.RowType === "Folder") {
 
                                                     if (row.original.Parent === 'root') {
-                                                        router.push(`${router.asPath}/folder/${row.original.Name}`);
+                                                        router.push(`/folder/${row.original.Name}`);
                                                     } else {
                                                         router.push(`${router.asPath}/${row.original.Name}`);
                                                     }
