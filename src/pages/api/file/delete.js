@@ -16,6 +16,7 @@ export default async function handler(req, res) {
         const fileIds = files.map((file) => file.Id);
         const folderIds = folders.map((folder) => folder.Id);
 
+        console.log(fileIds);
         console.log(folderIds);
 
         const db = connectFileSystem();
@@ -50,10 +51,6 @@ export default async function handler(req, res) {
                             return;
                         }
                     });
-
-                return res.status(200).json({
-                    message: "drew got executed successfully"
-                });
             }
 
             if (folderIds.length > 0) {
@@ -78,10 +75,10 @@ export default async function handler(req, res) {
                         }
                     });
 
-                return res.status(200).json({
-                    message: "drew got executed successfully"
-                });
             }
+            return res.status(200).json({
+                message: "drew got executed successfully"
+            });
 
         } catch (error) {
             console.error('Error deleting file(s):', error);

@@ -17,24 +17,21 @@ export default function RegisterPage() {
             return;
         }
 
-        try {
-            // Axios POST request to register API
-            const response = await axios.post('/api/user/register', {
-                username,
-                password,
-            });
-
+        // Axios POST request to register API
+        await axios.post('/api/user/register', {
+            username,
+            password,
+        }).then((response) => {
             alert(response.data.message || 'Registration successful! Please log in.');
             router.push('/login'); // Redirect to login page after registration
-        } catch (error) {
+        }).catch(function (error) {
             if (error.response) {
-                // Server responded with an error
-                alert(error.response.data.message || 'Registration failed.');
-            } else {
                 console.error('Registration error:', error);
                 alert('An error occurred. Please try again.');
             }
-        }
+        })
+
+
     };
 
     return (

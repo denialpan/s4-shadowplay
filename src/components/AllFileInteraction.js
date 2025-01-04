@@ -166,34 +166,31 @@ const AllFileInteraction = ({ path }) => {
                 formData.append('path', router.asPath.replace('/folder/', ''))
             }
 
-            try {
-                const response = await axios.post('/api/file/upload', formData, {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    },
-                    onUploadProgress: (progressEvent) => {
-                        const percentComplete = Math.round(
-                            (progressEvent.loaded * 100) / progressEvent.total
-                        );
-                        setUploadProgress((prev) => ({
-                            ...prev,
-                            [fileObject.fileUUID]: percentComplete,
-                        }));
-                    },
-                });
-
-                if (response.status === 200) {
-                    console.log(`File ${fileObject.file.name} uploaded successfully!`);
-                    // Remove the uploaded file from the `files` state
-                    setUploadFiles((prevFiles) =>
-                        prevFiles.filter((fileItem) => fileItem.fileUUID !== fileObject.fileUUID)
+            await axios.post('/api/file/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                onUploadProgress: (progressEvent) => {
+                    const percentComplete = Math.round(
+                        (progressEvent.loaded * 100) / progressEvent.total
                     );
-                } else {
-                    console.error(`Error uploading file ${fileObject.file.name}`);
-                }
-            } catch (error) {
+                    setUploadProgress((prev) => ({
+                        ...prev,
+                        [fileObject.fileUUID]: percentComplete,
+                    }));
+                },
+            }).then((response) => {
+
+                console.log(`File ${fileObject.file.name} uploaded successfully!`);
+                // Remove the uploaded file from the `files` state
+                setUploadFiles((prevFiles) =>
+                    prevFiles.filter((fileItem) => fileItem.fileUUID !== fileObject.fileUUID)
+                );
+
+            }).catch(function (error) {
                 console.error(`An error occurred during the file upload for ${fileObject.file.name}:`, error);
-            }
+
+            })
         });
     };
 
@@ -203,12 +200,12 @@ const AllFileInteraction = ({ path }) => {
         if (path) {
             folderPath = Array.isArray(path) ? path.join("/") : "";
         }
-        const response = await axios.post(`/api/file/folder`, {
+
+        await axios.post(`/api/file/folder`, {
             folderPath: folderPath,
             newFolderName: "this is a test with spaces",
         });
     }
-
 
     if (loading) return <p className="p-4">Loading files...</p>;
 

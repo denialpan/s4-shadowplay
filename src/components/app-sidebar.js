@@ -65,6 +65,7 @@ export function AppSidebar() {
 
 
     const getHierarchy = async () => {
+
         const response = await axios.get('/api/file/hierarchy');
 
         const folders = response.data.allFolders;

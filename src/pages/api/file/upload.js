@@ -57,7 +57,8 @@ export default async function handler(req, res) {
             const db = connectFileSystem();
 
             let fPath = 'root'
-            if (fields.path !== '') {
+            console.log(fields.path);
+            if (fields.path !== undefined) {
                 fPath = `/root/${fields.path[0]}`;
             }
 
