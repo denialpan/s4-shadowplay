@@ -8,11 +8,17 @@ export default async function handler(req, res) {
     if (req.method === "POST") {
 
         const { folderPath, newFolderName } = req.body;
-        console.log(folderPath + " " + newFolderName);
+
+        let fPath = 'root'
+        if (folderPath !== '') {
+            fPath = `/root/${folderPath}`;
+        }
+
+        console.log("DREW PACK" + fPath + " " + newFolderName);
         const db = connectFileSystem();
 
         try {
-            const parentId = await validateFolderHierarchy(folderPath.split('/').filter((segment) => segment.trim() !== ''));
+            const parentId = await validateFolderHierarchy(fPath.split('/').filter((segment) => segment.trim() !== ''));
             const folderId = await generateTimeUUID();
 
             await db.run(

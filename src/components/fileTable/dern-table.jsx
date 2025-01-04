@@ -123,42 +123,60 @@ const DernTable = ({ data: initialData, fetchFiles }) => {
 
     const handleDelete = async (row) => {
 
-        if (Object.keys(selectedRows).length < 2) {
-            // single deletion
-            try {
-                const response = await axios.delete('/api/file/delete', {
-                    data: { fileId: row.Id },  // file key in request body
-                });
+        const selectedFileRows = selectedRows.length ? selectedRows.map((rowIndex) => data[rowIndex]) : [row];
+        const deleteFiles = selectedFileRows.filter((r) => r.RowType === "File");
+        const deleteFolders = selectedFileRows.filter((r) => r.RowType === "Folder");
 
-                if (response.status === 200) {
-                    console.log(`File ${row.Name} deleted successfully`);
-                    fetchFiles();
+        // if is single selection
+        // if is multi selection
+
+        try {
+            const response = await axios.delete('/api/file/delete', {
+                data: {
+                    files: deleteFiles,
+                    folders: deleteFolders,
                 }
-            } catch (error) {
-                console.error(`Error deleting file ${row.Name}:`, error);
-            }
-        } else {
-            // multi deletion deletion
-            try {
-
-                const selectedFileRows = selectedRows.length
-                    ? selectedRows.map((rowIndex) => data[rowIndex]) // Get data for selected rows
-                    : [row]; // If no rows are selected, drag the current row
-
-                const mult = selectedFileRows.map((r) => r.Id);
-                const response = await axios.delete('/api/file/delete', {
-                    data: { fileIds: mult },  // file key in request body
-                });
-
-                if (response.status === 200) {
-                    console.log(`File ${mult} deleted successfully`);
-                    fetchFiles();
-                }
-            } catch (error) {
-                console.error(`Error deleting files ${selectedRows}:`, error);
-            }
+            })
+        } catch (error) {
+            console.log(error + " this is meaningless");
         }
 
+        // if (Object.keys(selectedRows).length < 2) {
+        //     // single deletion
+        //     try {
+        //         const response = await axios.delete('/api/file/delete', {
+        //             data: { fileId: row.Id },  // file key in request body
+        //         });
+
+        //         if (response.status === 200) {
+        //             console.log(`File ${row.Name} deleted successfully`);
+        //             fetchFiles();
+        //         }
+        //     } catch (error) {
+        //         console.error(`Error deleting file ${row.Name}:`, error);
+        //     }
+        // } else {
+        //     // multi deletion deletion
+        //     try {
+
+        //         const selectedFileRows = selectedRows.length
+        //             ? selectedRows.map((rowIndex) => data[rowIndex]) // Get data for selected rows
+        //             : [row]; // If no rows are selected, drag the current row
+
+        //         const mult = selectedFileRows.map((r) => r.Id);
+        //         const response = await axios.delete('/api/file/delete', {
+        //             data: { fileIds: mult },  // file key in request body
+        //         });
+
+        //         if (response.status === 200) {
+        //             console.log(`File ${mult} deleted successfully`);
+        //             fetchFiles();
+        //         }
+        //     } catch (error) {
+        //         console.error(`Error deleting files ${selectedRows}:`, error);
+        //     }
+        // }
+        fetchFiles();
         setSelectedRows([]);
     };
 

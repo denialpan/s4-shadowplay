@@ -40,7 +40,13 @@ export default async function handler(req, res) {
 
         // validate hierarchy from root 
         // if parent is null, folder is at root directory
-        const parentId = await validateFolderHierarchy(folderPath.split('/').filter((segment) => segment.trim() !== ''));
+        let fPath = 'root'
+        if (folderPath !== '') {
+            fPath = `/root/${folderPath}`;
+        }
+
+        console.log("DREW PACK " + fPath.split('/').filter((segment) => segment.trim() !== ''))
+        const parentId = await validateFolderHierarchy(fPath.split('/').filter((segment) => segment.trim() !== ''));
 
         if (parentId === -1) {
             res.status(403).json({ error: "nope" });

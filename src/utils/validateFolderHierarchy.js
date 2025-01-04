@@ -1,10 +1,14 @@
 import { connectFileSystem } from "../../database/connect";
 
 const validateFolderHierarchy = async (folderPath) => {
-    let parentId = 'root';
+    let parentId = null;
     const db = connectFileSystem();
 
     for (const folderName of folderPath) {
+
+        console.log(folderName);
+        console.log(parentId);
+
         const folderId = await new Promise((resolve, reject) => {
 
             db.get(

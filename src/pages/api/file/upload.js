@@ -56,14 +56,19 @@ export default async function handler(req, res) {
             const fileUUIDs = fields.fileUUID;
             const db = connectFileSystem();
 
-            let folderPath = ''
-            if (fields.path !== undefined) {
-                folderPath = fields.path[0];
+            let fPath = 'root'
+            if (fields.path !== '') {
+                fPath = `/root/${fields.path[0]}`;
             }
 
-            folderPath = decodeURIComponent(folderPath);
+            fPath = decodeURIComponent(fPath);
+            console.log("SOHOS")
+            console.log(fPath);
+            console.log(fPath.split('/').filter((segment) => segment.trim() !== ''));
 
-            const folderId = await validateFolderHierarchy(folderPath.split('/').filter((segment) => segment.trim() !== ''));
+            const folderId = await validateFolderHierarchy(fPath.split('/').filter((segment) => segment.trim() !== ''));
+
+            console.log("folder id " + folderId);
 
             await Promise.all(
                 Object.keys(files).map(async (fileField, index) => {
@@ -78,10 +83,10 @@ export default async function handler(req, res) {
                     try {
                         db.run(
                             `INSERT INTO files (id, s3_key, name, folder_id, size, type, file_extension, owner) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                            [fileUUID, "DREW S3 KEY", fileName, folderId, file.size, fileType, fileExtension, username],
+                            [fileUUID, "DREW S3 KEY", fileName, folderId, file.size, fileType, fileExtension, 1],
                             function (err) {
                                 if (err) {
-                                    console.error('Error creating file:', err.message);
+                                    console.error('Error creating file to database:', err.message);
                                 } else {
                                     console.log('File created successfully:', fileName);
                                 }
