@@ -3,9 +3,6 @@ import generateTimeUUID from '@/utils/generateTimeUUID';
 import axios from 'axios';
 import { useRouter } from 'next/router';
 
-import { columns, IndividualFile } from './fileTable/columns';
-import { DataTable } from './fileTable/data-table';
-
 import {
     ContextMenu,
     ContextMenuContent,
@@ -13,6 +10,7 @@ import {
     ContextMenuSeparator,
     ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import DernTable from './fileTable/dern-table';
 
 axios.defaults.withCredentials = true;
 
@@ -254,7 +252,7 @@ const AllFileInteraction = ({ path }) => {
 
                     </div>
 
-                    <DataTable columns={columns(fetchFolderContents)} data={combinedData} fetchFiles={fetchFolderContents} />
+                    <DernTable data={combinedData} fetchFiles={fetchFolderContents} />
                 </div>
             )}
 
