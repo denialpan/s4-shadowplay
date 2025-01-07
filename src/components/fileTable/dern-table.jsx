@@ -162,7 +162,7 @@ const DernTable = ({ data: initialData, fetchFiles }) => {
                                     setSelectedRows(data.map((_, index) => index));
                                 }
                             }}
-                            checked={selectedRows.length === data.length}
+                            checked={selectedRows.length === data.length && data.length > 0}
                         />
                     </TableHead>
                     <TableHead onClick={() => { sortData('Name'); setSelectedRows([]); }}>Name</TableHead>
