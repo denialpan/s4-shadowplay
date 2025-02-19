@@ -221,19 +221,19 @@ export function AppSidebar() {
             <SidebarFooter>
                 <SidebarMenu>
                     <div className="flex flex-col p-2 bg-zinc-200 justify-center whitespace-nowrap rounded-md text-sm font-medium dark:bg-zinc-800 dark:text-zinc-400">
-                        <div>
+                        <p className="text-xs">
                             Files: {fileStats.length}
-                        </div>
-                        <div>
+                        </p>
+                        <p className="text-xs">
                             Folders: {folderStats.length}
-                        </div>
-                        <div>
+                        </p>
+                        <p className="text-xs">
                             Total Size: {formatFileSize(Object.values(fileStats || {}).reduce((total, file) => total + (file.size || 0), 0))}
-                        </div>
+                        </p>
                     </div>
 
-                    <SidebarMenuButton onClick={() => { handleSignOut() }} className="hover:bg-red-600 hover:text-white">
-                        Sign out
+                    <SidebarMenuButton onClick={() => { handleSignOut() }} className="hover:bg-red-600 hover:text-white font-semibold">
+                        Sign Out
                     </SidebarMenuButton>
                 </SidebarMenu>
             </SidebarFooter>

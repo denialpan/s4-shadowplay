@@ -88,7 +88,7 @@ const AllFileInteraction = ({ path }) => {
         ...data.subFolders.map((folder) => ({
             Name: folder.name,
             Type: "-",
-            Size: "-",
+            Size: "Folder",
             Owner: folder.owner,
             Created: folder.created_at,
             Modified: folder.modified_at,
@@ -249,7 +249,7 @@ const AllFileInteraction = ({ path }) => {
 
                     </div>
 
-                    <DernTable data={combinedData} fetchFiles={fetchFolderContents} />
+                    <DernTable data={combinedData} fetchFiles={fetchFolderContents} path={path} />
                 </div>
             )}
 

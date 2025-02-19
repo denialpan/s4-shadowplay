@@ -11,8 +11,38 @@ import {
     ContextMenuSeparator,
     ContextMenuTrigger,
 } from "@/components/ui/context-menu"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+    DialogClose,
+} from "@/components/ui/dialog"
+import {
+    Form,
+    FormControl,
+    FormDescription,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
+} from "@/components/ui/form"
+import { useForm } from "react-hook-form"
 
-const DernTable = ({ data: initialData, fetchFiles }) => {
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { Button } from '@/components/ui/button'
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+
+
+const DernTable = ({ data: initialData, fetchFiles, path }) => {
 
     const [data, setData] = useState(initialData);
     const [sortConfig, setSortConfig] = useState({ property: null, order: "asc" });
@@ -20,6 +50,39 @@ const DernTable = ({ data: initialData, fetchFiles }) => {
     const [draggedRows, setDraggedRows] = useState([]);
     const [lastSelectedIndex, setLastSelectedIndex] = useState(null);
     const router = useRouter();
+
+    const onSubmit = async (event) => {
+
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+        const folderName = formData.get("folderName").trim();
+        const validFolderNameRegex = /^[a-zA-Z0-9-_,.()[\]{}&@!^%+=~]+( [a-zA-Z0-9-_,.()[\]{}&@!^%+=~]+)*$/;
+
+        if (!folderName) {
+            alert("Folder name cannot be empty.");
+            return;
+        }
+
+        if (!validFolderNameRegex.test(folderName)) {
+            alert("Folder name cannot contain: \\ / : * ? \" < > |");
+            return;
+        }
+
+        console.log(folderName);
+        console.log("NEW FOLDER " + router.asPath);
+        let folderPath = "";
+        if (path) {
+            folderPath = Array.isArray(path) ? path.join("/") : "";
+        }
+
+        await axios.post(`/api/file/folder`, {
+            folderPath: folderPath,
+            newFolderName: folderName,
+        });
+        fetchFiles();
+        setSelectedRows([]);
+    }
 
     // Sync data state with initialData prop
     useEffect(() => {
@@ -121,6 +184,21 @@ const DernTable = ({ data: initialData, fetchFiles }) => {
         setSelectedRows([]);
     };
 
+    // const handleNewFolder = async () => {
+    //     console.log("NEW FOLDER " + router.asPath);
+    //     let folderPath = "";
+    //     if (path) {
+    //         folderPath = Array.isArray(path) ? path.join("/") : "";
+    //     }
+
+    //     await axios.post(`/api/file/folder`, {
+    //         folderPath: folderPath,
+    //         newFolderName: "this is a test with spaces",
+    //     });
+    //     fetchFiles();
+    //     setSelectedRows([]);
+    // }
+
     const handleDelete = async (row) => {
 
         const selectedFileRows = selectedRows.length ? selectedRows.map((rowIndex) => data[rowIndex]) : [row];
@@ -145,129 +223,161 @@ const DernTable = ({ data: initialData, fetchFiles }) => {
     };
 
     return (
-        <Table>
 
-            <TableCaption>DREW PACK.</TableCaption>
-            <TableHeader>
-                <TableRow>
-                    <TableHead>
-                        <Checkbox
-                            onClick={(event) => {
-                                event.stopPropagation();
-                            }}
-                            onCheckedChange={() => {
-                                if (selectedRows.length === data.length) {
-                                    setSelectedRows([]);
-                                } else {
-                                    setSelectedRows(data.map((_, index) => index));
-                                }
-                            }}
-                            checked={selectedRows.length === data.length && data.length > 0}
-                        />
-                    </TableHead>
-                    <TableHead onClick={() => { sortData('Name'); setSelectedRows([]); }}>Name</TableHead>
-                    <TableHead onClick={() => { sortData('Modified'); setSelectedRows([]); }}>Last Modified</TableHead>
-                    <TableHead onClick={() => { sortData('Size'); setSelectedRows([]); }}>Size</TableHead>
-                    <TableHead onClick={() => { sortData('Owner'); setSelectedRows([]); }}>Owner</TableHead>
-                </TableRow>
-            </TableHeader>
-            <TableBody>
+        <ScrollArea className="h-[calc(100vh-250px)] w-full">
 
-                <TableRow onDoubleClick={() => {
-                    const regex = /folder\/[^/]+$/;
-                    if (regex.test(router.asPath)) {
-                        router.push('/')
-                    } else {
-                        router.push(router.asPath.substring(0, router.asPath.lastIndexOf('/')))
-                    }
-                }}
-                    key="previous"
-                    className={`hover:bg-zinc-400`} // Highlight selected row
-                >
-                    <TableCell className="max-w-1">
-                        <MoveLeft size="16" />
-                    </TableCell>
-                    <TableCell className="max-w-1">
-                        ..
-                    </TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-
-                </TableRow>
-
-                {data.map((row, index) => (
-                    <ContextMenu key={index} modal={false}>
-                        <ContextMenuTrigger asChild>
-                            <TableRow
-                                key={row.Id}
-                                data-index={index}
-                                draggable={row.RowType === "File" || row.RowType === "Folder"} // Only files are draggable
-                                onDragStart={() => handleDragStart(row)}
-                                onDrop={row.RowType === "Folder" ? () => handleDropOnFolder(row) : undefined}
-                                onDragOver={(event) => {
-                                    row.RowType === "Folder" &&
-                                        !draggedRows.some((draggedRow) => draggedRow.Id === row.Id)
-                                        ? event.preventDefault()
-                                        : undefined
-                                }
-
-                                }
-                                onClick={(event) => { toggleRowSelection(index, event) }}
-                                onDoubleClick={() => {
-                                    if (row.RowType === "Folder") {
-
-                                        if (row.Parent === 'root') {
-                                            router.push(`/folder/${row.Name}`);
-                                        } else {
-                                            router.push(`${router.asPath}/${row.Name}`);
-                                        }
+            <Table>
+                {/* <TableCaption>s4-shadowplay</TableCaption> */}
+                <TableHeader>
+                    <TableRow>
+                        <TableHead>
+                            <Checkbox
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                }}
+                                onCheckedChange={() => {
+                                    if (selectedRows.length === data.length) {
+                                        setSelectedRows([]);
+                                    } else {
+                                        setSelectedRows(data.map((_, index) => index));
                                     }
                                 }}
-                                className={`hover:bg-zinc-400 ${selectedRows.includes(index) ? "bg-zinc-300 dark:bg-zinc-600" : ""
-                                    }`} // Highlight selected row
-                            >
-                                <TableCell className="max-w-1">
-                                    <Checkbox
-                                        onClick={(event) => {
-                                            event.stopPropagation();
-                                        }}
-                                        onCheckedChange={() => {
-                                            if (selectedRows.includes(index)) {
-                                                setSelectedRows((prev) =>
-                                                    prev.filter((i) => i !== index)
-                                                );
-                                            } else {
-                                                setSelectedRows((prev) => [...prev, index]);
+                                checked={selectedRows.length === data.length && data.length > 0}
+                            />
+                        </TableHead>
+                        <TableHead onClick={() => { sortData('Name'); setSelectedRows([]); }}>Name</TableHead>
+                        <TableHead onClick={() => { sortData('Modified'); setSelectedRows([]); }}>Last Modified</TableHead>
+                        <TableHead onClick={() => { sortData('Size'); setSelectedRows([]); }}>Size</TableHead>
+                        <TableHead onClick={() => { sortData('Owner'); setSelectedRows([]); }}>Owner</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+
+                    <TableRow onDoubleClick={() => {
+                        const regex = /folder\/[^/]+$/;
+                        if (regex.test(router.asPath)) {
+                            router.push('/')
+                        } else {
+                            router.push(router.asPath.substring(0, router.asPath.lastIndexOf('/')))
+                        }
+                    }}
+                        key="previous"
+                        className={`hover:bg-zinc-400`} // Highlight selected row
+                    >
+                        <TableCell className="max-w-1">
+                            <MoveLeft size="16" />
+                        </TableCell>
+                        <TableCell className="max-w-1">
+                            -
+                        </TableCell>
+                        <TableCell>-</TableCell>
+                        <TableCell>-</TableCell>
+                        <TableCell>-</TableCell>
+                        <TableCell>-</TableCell>
+
+                    </TableRow>
+
+                    {data.map((row, index) => (
+                        <Dialog>
+                            <ContextMenu key={index} modal={false}>
+                                <ContextMenuTrigger asChild>
+                                    <TableRow
+                                        key={row.Id}
+                                        data-index={index}
+                                        draggable={row.RowType === "File" || row.RowType === "Folder"} // Only files are draggable
+                                        onDragStart={() => handleDragStart(row)}
+                                        onDrop={row.RowType === "Folder" ? () => handleDropOnFolder(row) : undefined}
+                                        onDragOver={(event) => {
+                                            row.RowType === "Folder" &&
+                                                !draggedRows.some((draggedRow) => draggedRow.Id === row.Id)
+                                                ? event.preventDefault()
+                                                : undefined
+                                        }
+
+                                        }
+                                        onClick={(event) => { toggleRowSelection(index, event) }}
+                                        onDoubleClick={() => {
+                                            if (row.RowType === "Folder") {
+
+                                                if (row.Parent === 'root') {
+                                                    router.push(`/folder/${row.Name}`);
+                                                } else {
+                                                    router.push(`${router.asPath}/${row.Name}`);
+                                                }
                                             }
                                         }}
-                                        checked={selectedRows.includes(index)} />
-                                </TableCell>
-                                <TableCell>{row.Name}</TableCell>
-                                <TableCell>{formatFileDate(row.Modified)}</TableCell>
-                                <TableCell>
-                                    {row.RowType === "Folder"
-                                        ? row.Size
-                                        : formatFileSize(row.Size)}
-                                </TableCell>
-                                <TableCell>{row.Owner}</TableCell>
-                                <TableCell>
-                                    <MoreHorizontal size="16" />
-                                </TableCell>
-                            </TableRow>
-                        </ContextMenuTrigger>
-                        <ContextMenuContent>
-                            <ContextMenuItem onClick={() => { handleDelete(row) }}>Delete</ContextMenuItem>
-                            <ContextMenuSeparator />
-                            <ContextMenuItem>Edit</ContextMenuItem>
-                        </ContextMenuContent>
+                                        className={`hover:bg-zinc-400 ${selectedRows.includes(index) ? "bg-zinc-300 dark:bg-zinc-600" : ""
+                                            }`} // Highlight selected row
+                                    >
+                                        <TableCell className="max-w-1">
+                                            <Checkbox
+                                                onClick={(event) => {
+                                                    event.stopPropagation();
+                                                }}
+                                                onCheckedChange={() => {
+                                                    if (selectedRows.includes(index)) {
+                                                        setSelectedRows((prev) =>
+                                                            prev.filter((i) => i !== index)
+                                                        );
+                                                    } else {
+                                                        setSelectedRows((prev) => [...prev, index]);
+                                                    }
+                                                }}
+                                                checked={selectedRows.includes(index)} />
+                                        </TableCell>
+                                        <TableCell>{row.Name}</TableCell>
+                                        <TableCell>{formatFileDate(row.Modified)}</TableCell>
+                                        <TableCell>
+                                            {row.RowType === "Folder"
+                                                ? row.Size
+                                                : formatFileSize(row.Size)}
+                                        </TableCell>
+                                        <TableCell>{row.Owner}</TableCell>
+                                        <TableCell>
+                                            <MoreHorizontal size="16" />
+                                        </TableCell>
+                                    </TableRow>
+                                </ContextMenuTrigger>
+                                <ContextMenuContent>
+                                    <DialogTrigger asChild>
+                                        <ContextMenuItem>
+                                            New Folder
+                                        </ContextMenuItem>
+                                    </DialogTrigger>
+                                    <ContextMenuSeparator />
+                                    <ContextMenuItem>Edit</ContextMenuItem>
+                                    <ContextMenuItem onClick={() => { handleDelete(row) }}>Delete</ContextMenuItem>
+                                </ContextMenuContent>
 
-                    </ContextMenu>
+                            </ContextMenu>
+                            <DialogContent className="sm:max-w-[425px]">
+                                <DialogTitle>
+                                    New Folder
+                                </DialogTitle>
+                                <DialogHeader>
+                                </DialogHeader>
+                                <form onSubmit={onSubmit}>
+                                    <div className="flex space-x-3">
+                                        <Input name="folderName" placeholder="Folder name" />
+                                        <DialogClose asChild>
+                                            <Button className="w-16" type="submit">Create</Button>
+                                        </DialogClose>
+                                    </div>
+                                </form>
 
-                ))}
-            </TableBody>
-        </Table >
+
+
+
+                            </DialogContent>
+                        </Dialog>
+
+
+                    ))}
+                </TableBody>
+            </Table >
+            <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+
 
     )
 }

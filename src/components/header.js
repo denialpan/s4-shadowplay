@@ -21,7 +21,7 @@ const Header = () => {
     return (
         <div className="flex justify-between items-center p-4">
             {router.pathname !== "/login" && <SidebarTrigger />}
-            s4-shadowplay
+
 
             <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>

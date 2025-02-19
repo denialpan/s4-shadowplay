@@ -72,7 +72,7 @@ export default function LoginPage() {
                             <FormItem>
                                 <FormLabel>Username</FormLabel>
                                 <FormControl>
-                                    <Input type="username" placeholder="..." {...field} />
+                                    <Input type="username" placeholder="" {...field} />
                                 </FormControl>
                                 <FormDescription>
                                 </FormDescription>
@@ -87,7 +87,7 @@ export default function LoginPage() {
                             <FormItem>
                                 <FormLabel>Password</FormLabel>
                                 <FormControl>
-                                    <Input type="password" placeholder="..." {...field} />
+                                    <Input type="password" placeholder="" {...field} />
                                 </FormControl>
                                 <FormDescription>
                                 </FormDescription>

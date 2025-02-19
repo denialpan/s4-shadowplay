@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import ThemeSelector from "@/components/themeSelector";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const secret = new TextEncoder().encode(JWT_SECRET);
