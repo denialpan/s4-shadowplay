@@ -252,30 +252,65 @@ const DernTable = ({ data: initialData, fetchFiles, path }) => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
+                    <Dialog>
+                        <ContextMenu key="cd .." modal={false}>
+                            <ContextMenuTrigger asChild>
+                                <TableRow onDoubleClick={() => {
+                                    const regex = /folder\/[^/]+$/;
+                                    if (regex.test(router.asPath)) {
+                                        router.push('/')
+                                    } else {
+                                        router.push(router.asPath.substring(0, router.asPath.lastIndexOf('/')))
+                                    }
+                                }}
+                                    key="previous"
+                                    className={`hover:bg-zinc-400`} // Highlight selected row
+                                >
+                                    <TableCell className="max-w-1">
+                                        <MoveLeft size="16" />
+                                    </TableCell>
+                                    <TableCell className="max-w-1">
+                                        -
+                                    </TableCell>
+                                    <TableCell>-</TableCell>
+                                    <TableCell>-</TableCell>
+                                    <TableCell>-</TableCell>
+                                    <TableCell>-</TableCell>
 
-                    <TableRow onDoubleClick={() => {
-                        const regex = /folder\/[^/]+$/;
-                        if (regex.test(router.asPath)) {
-                            router.push('/')
-                        } else {
-                            router.push(router.asPath.substring(0, router.asPath.lastIndexOf('/')))
-                        }
-                    }}
-                        key="previous"
-                        className={`hover:bg-zinc-400`} // Highlight selected row
-                    >
-                        <TableCell className="max-w-1">
-                            <MoveLeft size="16" />
-                        </TableCell>
-                        <TableCell className="max-w-1">
-                            -
-                        </TableCell>
-                        <TableCell>-</TableCell>
-                        <TableCell>-</TableCell>
-                        <TableCell>-</TableCell>
-                        <TableCell>-</TableCell>
+                                </TableRow>
+                            </ContextMenuTrigger>
+                            <ContextMenuContent>
+                                <DialogTrigger asChild>
+                                    <ContextMenuItem>
+                                        New Folder
+                                    </ContextMenuItem>
+                                </DialogTrigger>
+                                <ContextMenuSeparator />
+                                <ContextMenuItem>Edit</ContextMenuItem>
+                                <ContextMenuItem onClick={() => { handleDelete(row) }}>Delete</ContextMenuItem>
+                            </ContextMenuContent>
 
-                    </TableRow>
+                        </ContextMenu>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <DialogTitle>
+                                New Folder
+                            </DialogTitle>
+                            <DialogHeader>
+                            </DialogHeader>
+                            <form onSubmit={onSubmit}>
+                                <div className="flex space-x-3">
+                                    <Input name="folderName" placeholder="Folder name" />
+                                    <DialogClose asChild>
+                                        <Button className="w-16" type="submit">Create</Button>
+                                    </DialogClose>
+                                </div>
+                            </form>
+
+
+
+
+                        </DialogContent>
+                    </Dialog>
 
                     {data.map((row, index) => (
                         <Dialog>

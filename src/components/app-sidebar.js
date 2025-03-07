@@ -1,5 +1,5 @@
 import { Folder, Settings, ArrowLeftFromLine, ChevronDown, ChevronUp, FilePen } from "lucide-react"
-
+import folderTree from "./folderHierharchy/folderTree"
 import {
     Sidebar,
     SidebarContent,
@@ -33,6 +33,8 @@ import { useRouter } from "next/router"
 import { useAuth } from "@/contexts/authContext";
 import { useEffect, useState } from 'react'
 import axios from "axios";
+import FolderTreeView from "./folderHierharchy/folderTree"
+import FolderTree from "./folderHierharchy/folderTree"
 
 export function AppSidebar() {
     const router = useRouter();
@@ -69,6 +71,9 @@ export function AppSidebar() {
         const response = await axios.get('/api/file/hierarchy');
 
         const folders = response.data.allFolders;
+
+        console.log("SOHOS");
+        console.log(folders);
 
         setFileStats(response.data.allFiles);
         setFolderStats(response.data.allFolders);
@@ -118,64 +123,66 @@ export function AppSidebar() {
             });
         }
 
+        console.log(rootFolders);
+
         setHierarchy(rootFolders);
     }
 
-    const FolderTree = ({ tree }) => {
-        const [accordionState, setAccordionState] = useState({});
+    // const FolderTree = ({ tree }) => {
+    //     const [accordionState, setAccordionState] = useState({});
 
-        useEffect(() => {
-            // Load accordion state from localStorage on mount
-            const savedState = localStorage.getItem("accordionState");
-            if (savedState) {
-                setAccordionState(JSON.parse(savedState));
-            }
-        }, []);
+    //     useEffect(() => {
+    //         // Load accordion state from localStorage on mount
+    //         const savedState = localStorage.getItem("accordionState");
+    //         if (savedState) {
+    //             setAccordionState(JSON.parse(savedState));
+    //         }
+    //     }, []);
 
-        const handleAccordionChange = (folderId, isOpen) => {
-            // Update the accordion state
-            const newState = { ...accordionState, [folderId]: isOpen };
-            setAccordionState(newState);
+    //     const handleAccordionChange = (folderId, isOpen) => {
+    //         // Update the accordion state
+    //         const newState = { ...accordionState, [folderId]: isOpen };
+    //         setAccordionState(newState);
 
-            // Save updated state to localStorage
-            localStorage.setItem("accordionState", JSON.stringify(newState));
-        };
+    //         // Save updated state to localStorage
+    //         localStorage.setItem("accordionState", JSON.stringify(newState));
+    //     };
 
-        const router = useRouter();
+    //     const router = useRouter();
 
-        return (
-            <div>
-                {tree.map(folder => (
-                    <Accordion
-                        type="single"
-                        collapsible
-                        key={folder.id}
-                        className="ml-2 pl-1 border-l-2"
-                        value={accordionState[folder.id] ? "item-1" : undefined} // Control open state
-                        onValueChange={(value) => handleAccordionChange(folder.id, value === "item-1")}
-                    >
-                        <AccordionItem value="item-1">
-                            <AccordionTrigger>
-                                <div
-                                    className="flex flex-row items-center gap-1 text-nowrap"
-                                    onClick={(event) => {
-                                        router.push(folder.url);
-                                        event.stopPropagation();
-                                    }}
-                                >
-                                    <Folder size="16" />
-                                    {folder.name}
-                                </div>
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                {folder.children.length > 0 && <FolderTree tree={folder.children} />}
-                            </AccordionContent>
-                        </AccordionItem>
-                    </Accordion>
-                ))}
-            </div>
-        );
-    };
+    //     return (
+    //         <div>
+    //             {tree.map(folder => (
+    //                 <Accordion
+    //                     type="single"
+    //                     collapsible
+    //                     key={folder.id}
+    //                     className="ml-2 pl-1 border-l-2"
+    //                     value={accordionState[folder.id] ? "item-1" : undefined} // Control open state
+    //                     onValueChange={(value) => handleAccordionChange(folder.id, value === "item-1")}
+    //                 >
+    //                     <AccordionItem value="item-1">
+    //                         <AccordionTrigger>
+    //                             <div
+    //                                 className="flex flex-row items-center gap-1 text-nowrap"
+    //                                 onClick={(event) => {
+    //                                     router.push(folder.url);
+    //                                     event.stopPropagation();
+    //                                 }}
+    //                             >
+    //                                 <Folder size="16" />
+    //                                 {folder.name}
+    //                             </div>
+    //                         </AccordionTrigger>
+    //                         <AccordionContent>
+    //                             {folder.children.length > 0 && <FolderTree tree={folder.children} />}
+    //                         </AccordionContent>
+    //                     </AccordionItem>
+    //                 </Accordion>
+    //             ))}
+    //         </div>
+    //     );
+    // };
 
     useEffect(() => {
         getHierarchy();
@@ -195,7 +202,7 @@ export function AppSidebar() {
             <SidebarContent >
                 <SidebarMenu>
 
-                    <div className="m-2 pl-1 rounded-md dark:bg-zinc-800">
+                    {/* <div className="m-2 pl-1 rounded-md dark:bg-zinc-800">
                         <Accordion type="single" collapsible key="root" className="pl-1">
                             <AccordionItem value="item-1">
                                 <AccordionTrigger>
@@ -212,7 +219,12 @@ export function AppSidebar() {
                             </AccordionItem>
                         </Accordion>
 
-                    </div>
+                    </div> */}
+
+                    <FolderTree>
+
+                    </FolderTree>
+
                 </SidebarMenu>
 
 
