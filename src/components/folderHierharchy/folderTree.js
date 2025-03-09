@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react'
 import { Folder, Settings, ArrowLeftFromLine, ChevronDown, ChevronRight, FilePen, FolderOpen } from "lucide-react"
 import { Button } from "../ui/button";
 import axios from "axios";
+import { ScrollBar, ScrollArea } from "../ui/scroll-area";
+import { useSidebar } from "../ui/sidebar";
 
-const buildFolderTree = (folders) => {
+const buildFolderTree = (folders, options) => {
 
     const folderMap = {};
     const tree = [];
@@ -23,20 +25,24 @@ const buildFolderTree = (folders) => {
         }
     });
 
-    // add urls to tree
-    tree.forEach((rootFolder) => {
-        rootFolder.url = `/folder/${rootFolder.name}`;
-        queue.push(rootFolder);
-    });
-
-    while (queue.length > 0) {
-        const currentFolder = queue.shift();
-
-        currentFolder.children.forEach((childFolder) => {
-            childFolder.url = `${currentFolder.url}/${childFolder.name}`;
-            queue.push(childFolder);
+    if (options.redirect) {
+        // add urls to tree
+        tree.forEach((rootFolder) => {
+            rootFolder.url = `/folder/${rootFolder.name}`;
+            queue.push(rootFolder);
         });
+
+        while (queue.length > 0) {
+            const currentFolder = queue.shift();
+
+            currentFolder.children.forEach((childFolder) => {
+                childFolder.url = `${currentFolder.url}/${childFolder.name}`;
+                queue.push(childFolder);
+            });
+        }
+
     }
+
 
     return tree;
 };
@@ -45,6 +51,7 @@ const buildFolderTree = (folders) => {
 const FolderTreeView = ({ nodes }) => {
     const [expanded, setExpanded] = useState({});
     const router = useRouter();
+    const { setOpenMobile } = useSidebar();
 
     // save expanded state from localStorage on component mount
     useEffect(() => {
@@ -58,9 +65,9 @@ const FolderTreeView = ({ nodes }) => {
         setExpanded((prev) => {
             const newExpanded = {
                 ...prev,
-                [id]: !prev[id], // Toggle expand state
+                [id]: !prev[id],
             };
-            localStorage.setItem("expandedFolders", JSON.stringify(newExpanded)); // Save to localStorage
+            localStorage.setItem("expandedFolders", JSON.stringify(newExpanded));
             return newExpanded;
         });
     };
@@ -79,8 +86,8 @@ const FolderTreeView = ({ nodes }) => {
                             {expanded[node.id] ? <FolderOpen size="16" /> : <Folder size="16" />}
                         </span>
                         <span className="ml-2 text-nowrap" onClick={(event) => {
-                            console.log(node);
                             router.push(node.url);
+                            setOpenMobile(false);
                             event.stopPropagation();
                         }}>
                             {node.name}
@@ -106,7 +113,7 @@ const FolderTree = () => {
         const getFolderData = async () => {
             try {
                 const response = await axios.get("/api/file/hierarchy");
-                const structuredFolders = buildFolderTree(response.data.allFolders);
+                const structuredFolders = buildFolderTree(response.data.allFolders, { redirect: true });
                 setFolders(structuredFolders);
             } catch (error) {
                 console.error("Error fetching folder data:", error);
@@ -117,7 +124,7 @@ const FolderTree = () => {
     }, []);
 
     return (
-        <div>
+        <div className="custom-scrollbar">
             <FolderTreeView nodes={folders} />
         </div>
     );

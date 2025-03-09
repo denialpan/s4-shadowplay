@@ -35,9 +35,11 @@ import { useEffect, useState } from 'react'
 import axios from "axios";
 import FolderTreeView from "./folderHierharchy/folderTree"
 import FolderTree from "./folderHierharchy/folderTree"
+import { useSidebar } from "@/components/ui/sidebar"
 
 export function AppSidebar() {
     const router = useRouter();
+    const { setOpenMobile } = useSidebar();
     const { authData, setAuthData } = useAuth();
     const [hierarchy, setHierarchy] = useState({});
     const [fileStats, setFileStats] = useState({});
@@ -194,7 +196,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarGroupLabel>
-                            <span className="mr-1 cursor-pointer" onClick={() => { router.push("/") }}> Home </span>  | s4-shadowplay | {authData.username}
+                            <span className="mr-1 cursor-pointer" onClick={() => { router.push("/"); setOpenMobile(false) }}> Home </span>  | s4-shadowplay | {authData.username}
                         </SidebarGroupLabel>
                     </SidebarMenuItem>
                 </SidebarMenu>
