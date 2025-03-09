@@ -1,65 +1,106 @@
 import { useRouter } from "next/router"
 import { useAuth } from "@/contexts/authContext";
 import { useEffect, useState } from 'react'
+import { Folder, Settings, ArrowLeftFromLine, ChevronDown, ChevronRight, FilePen, FolderOpen } from "lucide-react"
+import { Button } from "../ui/button";
 import axios from "axios";
 
-
 const buildFolderTree = (folders) => {
-    const folderMap = {}; // Store folders by id
-    const tree = [];
 
-    // Initialize folder entries in folderMap
+    const folderMap = {};
+    const tree = [];
+    const queue = [];
+
     folders.forEach((folder) => {
         folderMap[folder.id] = { ...folder, children: [] };
     });
 
-    // Build the tree by linking children to their parents
     folders.forEach((folder) => {
         if (folder.parent_id === "root") {
-            tree.push(folderMap[folder.id]); // Root-level folders
+            tree.push(folderMap[folder.id]);
         } else if (folderMap[folder.parent_id]) {
             folderMap[folder.parent_id].children.push(folderMap[folder.id]);
         }
     });
 
+    // add urls to tree
+    tree.forEach((rootFolder) => {
+        rootFolder.url = `/folder/${rootFolder.name}`;
+        queue.push(rootFolder);
+    });
+
+    while (queue.length > 0) {
+        const currentFolder = queue.shift();
+
+        currentFolder.children.forEach((childFolder) => {
+            childFolder.url = `${currentFolder.url}/${childFolder.name}`;
+            queue.push(childFolder);
+        });
+    }
+
     return tree;
 };
 
+// recursive component
 const FolderTreeView = ({ nodes }) => {
     const [expanded, setExpanded] = useState({});
+    const router = useRouter();
+
+    // save expanded state from localStorage on component mount
+    useEffect(() => {
+        const storedState = localStorage.getItem("expandedFolders");
+        if (storedState) {
+            setExpanded(JSON.parse(storedState));
+        }
+    }, []);
 
     const toggleExpand = (id) => {
-        setExpanded((prev) => ({
-            ...prev,
-            [id]: !prev[id], // Toggle expand state
-        }));
+        setExpanded((prev) => {
+            const newExpanded = {
+                ...prev,
+                [id]: !prev[id], // Toggle expand state
+            };
+            localStorage.setItem("expandedFolders", JSON.stringify(newExpanded)); // Save to localStorage
+            return newExpanded;
+        });
     };
 
     return (
-        <ul className="pl-4">
+        <ul className="text-sm ml-2 border-l">
             {nodes.map((node) => (
-                <li key={node.id} className="list-none">
-                    <div className="flex items-center cursor-pointer" onClick={() => toggleExpand(node.id)}>
-                        {node.children.length > 0 ? (
-                            <span className="mr-2">{expanded[node.id] ? "📂" : "📁"}</span>
-                        ) : (
-                            <span className="mr-2">📁</span>
-                        )}
-                        <span>{node.name}</span>
+                <div key={node.id} className="mt-1">
+                    <div
+                        className="flex items-center cursor-pointer"
+                    >
+                        <span className="mr-2" onClick={() => toggleExpand(node.id)}>
+                            {expanded[node.id] ? <ChevronDown size="16" /> : <ChevronRight size="16" />}
+                        </span>
+                        <span>
+                            {expanded[node.id] ? <FolderOpen size="16" /> : <Folder size="16" />}
+                        </span>
+                        <span className="ml-2 text-nowrap" onClick={(event) => {
+                            console.log(node);
+                            router.push(node.url);
+                            event.stopPropagation();
+                        }}>
+                            {node.name}
+                        </span>
                     </div>
 
-                    {/* Render children if expanded */}
                     {expanded[node.id] && node.children.length > 0 && (
                         <FolderTreeView nodes={node.children} />
                     )}
-                </li>
+                </div>
+
             ))}
         </ul>
     );
 };
 
+// main render component
 const FolderTree = () => {
     const [folders, setFolders] = useState([]);
+    const router = useRouter();
 
     useEffect(() => {
         const getFolderData = async () => {
@@ -76,7 +117,7 @@ const FolderTree = () => {
     }, []);
 
     return (
-        <div className="p-4 border rounded-md">
+        <div>
             <FolderTreeView nodes={folders} />
         </div>
     );

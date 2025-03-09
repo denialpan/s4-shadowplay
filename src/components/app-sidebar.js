@@ -194,7 +194,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarGroupLabel>
-                            s4-shadowplay | {authData.username}
+                            <span className="mr-1 cursor-pointer" onClick={() => { router.push("/") }}> Home </span>  | s4-shadowplay | {authData.username}
                         </SidebarGroupLabel>
                     </SidebarMenuItem>
                 </SidebarMenu>
