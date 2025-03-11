@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import ThemeSelector from "@/components/themeSelector";
+import { RefreshProvider } from "@/utils/refreshContent";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const secret = new TextEncoder().encode(JWT_SECRET);
@@ -50,31 +51,32 @@ export default function s4shadowplay({ Component, pageProps }) {
     const { authData } = pageProps;
     const router = useRouter();
     return (
-
-        <AuthProvider initialAuthData={authData}>
-            <ThemeProvider
-                attribute="class"
-                defaultTheme="system"
-                enableSystem
-            // disableTransitionOnChange
-            >
-                {router.pathname === "/login" ? (
-                    <div className="flex-1 overflow-y-auto">
-                        <Header />
-                        <Component {...pageProps} />
-                    </div>
-                ) : (
-                    <SidebarProvider >
-                        <AppSidebar />
+        <RefreshProvider>
+            <AuthProvider initialAuthData={authData}>
+                <ThemeProvider
+                    attribute="class"
+                    defaultTheme="system"
+                    enableSystem
+                >
+                    {router.pathname === "/login" ? (
                         <div className="flex-1 overflow-y-auto">
                             <Header />
                             <Component {...pageProps} />
                         </div>
-                    </SidebarProvider>
-                )}
+                    ) : (
+                        <SidebarProvider >
+                            <AppSidebar />
+                            <div className="flex-1 overflow-y-auto">
+                                <Header />
+                                <Component {...pageProps} />
+                            </div>
+                        </SidebarProvider>
+                    )}
 
-            </ThemeProvider>
+                </ThemeProvider>
 
-        </AuthProvider>
+            </AuthProvider>
+        </RefreshProvider>
+
     )
 }

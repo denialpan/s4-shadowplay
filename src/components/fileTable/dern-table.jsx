@@ -40,9 +40,7 @@ import { Button } from '@/components/ui/button'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 
-
-
-const DernTable = ({ data: initialData, fetchFiles, path }) => {
+const DernTable = ({ data: initialData, triggerRefresh, path }) => {
 
     const [data, setData] = useState(initialData);
     const [sortConfig, setSortConfig] = useState({ property: null, order: "asc" });
@@ -80,7 +78,7 @@ const DernTable = ({ data: initialData, fetchFiles, path }) => {
             folderPath: folderPath,
             newFolderName: folderName,
         });
-        fetchFiles();
+        triggerRefresh();
         setSelectedRows([]);
     }
 
@@ -178,26 +176,11 @@ const DernTable = ({ data: initialData, fetchFiles, path }) => {
                 targetFolder: folderRow.Id,
             })
 
-            fetchFiles();
+            triggerRefresh();
         }
         setDraggedRows([]);
         setSelectedRows([]);
     };
-
-    // const handleNewFolder = async () => {
-    //     console.log("NEW FOLDER " + router.asPath);
-    //     let folderPath = "";
-    //     if (path) {
-    //         folderPath = Array.isArray(path) ? path.join("/") : "";
-    //     }
-
-    //     await axios.post(`/api/file/folder`, {
-    //         folderPath: folderPath,
-    //         newFolderName: "this is a test with spaces",
-    //     });
-    //     fetchFiles();
-    //     setSelectedRows([]);
-    // }
 
     const handleDelete = async (row) => {
 
@@ -218,13 +201,13 @@ const DernTable = ({ data: initialData, fetchFiles, path }) => {
             }
         })
 
-        fetchFiles();
+        triggerRefresh();
         setSelectedRows([]);
     };
 
     return (
 
-        <ScrollArea className="h-[calc(100vh-250px)] w-full">
+        <ScrollArea className="h-[calc(100vh-220px)] w-full">
 
             <Table>
                 {/* <TableCaption>s4-shadowplay</TableCaption> */}
@@ -305,9 +288,6 @@ const DernTable = ({ data: initialData, fetchFiles, path }) => {
                                     </DialogClose>
                                 </div>
                             </form>
-
-
-
 
                         </DialogContent>
                     </Dialog>
@@ -399,9 +379,6 @@ const DernTable = ({ data: initialData, fetchFiles, path }) => {
                                         </DialogClose>
                                     </div>
                                 </form>
-
-
-
 
                             </DialogContent>
                         </Dialog>

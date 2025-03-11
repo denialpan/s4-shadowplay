@@ -11,10 +11,15 @@ import {
     ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 import DernTable from './fileTable/dern-table';
+import { useRefresh } from '@/utils/refreshContent';
+
 
 axios.defaults.withCredentials = true;
 
 const AllFileInteraction = ({ path }) => {
+
+    // refresh trigger
+    const { refreshCounter, triggerRefresh } = useRefresh();
 
     // display table consts
     const [files, setFiles] = useState([]);
@@ -43,6 +48,7 @@ const AllFileInteraction = ({ path }) => {
 
             console.log(response.data);
             setData(response.data || []);
+            setValid(true);
 
         }).catch(function (error) {
 
@@ -50,11 +56,17 @@ const AllFileInteraction = ({ path }) => {
                 setValid(false);
                 setData({ subFolders: [], subFiles: [] });
             }
+
         }).finally(() => {
             setLoading(false);
         });
 
     };
+
+    // refresh trigger
+    useEffect(() => {
+        fetchFolderContents();
+    }, [refreshCounter, path]);
 
     useEffect(() => {
 
@@ -218,12 +230,6 @@ const AllFileInteraction = ({ path }) => {
             ) : (
                 <div>
 
-                    <ContextMenu>
-                        <ContextMenuTrigger>Right click</ContextMenuTrigger>
-                        <ContextMenuContent>
-                            <ContextMenuItem onClick={() => handleNewFolder()}>new folder</ContextMenuItem>
-                        </ContextMenuContent>
-                    </ContextMenu>
                     <div
                         onDragOver={handleDragOver}
                         onDrop={handleDrop}
@@ -249,7 +255,7 @@ const AllFileInteraction = ({ path }) => {
 
                     </div>
 
-                    <DernTable data={combinedData} fetchFiles={fetchFolderContents} path={path} />
+                    <DernTable data={combinedData} triggerRefresh={triggerRefresh} path={path} />
                 </div>
             )}
 

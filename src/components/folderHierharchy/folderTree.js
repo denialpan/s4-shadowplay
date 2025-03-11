@@ -6,6 +6,7 @@ import { Button } from "../ui/button";
 import axios from "axios";
 import { ScrollBar, ScrollArea } from "../ui/scroll-area";
 import { useSidebar } from "../ui/sidebar";
+import { useRefresh } from "@/utils/refreshContent";
 
 const buildFolderTree = (folders, options) => {
 
@@ -108,6 +109,7 @@ const FolderTreeView = ({ nodes }) => {
 const FolderTree = () => {
     const [folders, setFolders] = useState([]);
     const router = useRouter();
+    const { refreshCounter, triggerRefresh } = useRefresh(); // Get refresh state
 
     useEffect(() => {
         const getFolderData = async () => {
@@ -121,7 +123,7 @@ const FolderTree = () => {
         };
 
         getFolderData();
-    }, []);
+    }, [refreshCounter]);
 
     return (
         <div className="custom-scrollbar">
