@@ -28,6 +28,10 @@ body {
     filter: invert(10%);
 }
 
+.ninety-max-height {
+    max-height: 90%;
+}
+
 @layer base {
     :root {
         --background: 0 0% 100%;
