@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/accordion"
 
 import { Button } from "./ui/button"
+
 import { useRouter } from "next/router"
 import { useAuth } from "@/contexts/authContext";
 import { useEffect, useState } from 'react'
@@ -40,9 +41,7 @@ export function AppSidebar() {
     const router = useRouter();
     const { setOpenMobile } = useSidebar();
     const { authData, setAuthData } = useAuth();
-
-    const [fileStats, setFileStats] = useState({});
-    const [folderStats, setFolderStats] = useState({});
+    const [hierarchy, setHierarchy] = useState({});
 
     const formatFileSize = (size) => {
         if (size < 1024) return `${size} B`;
@@ -65,6 +64,10 @@ export function AppSidebar() {
         }
     };
 
+    useEffect(() => {
+        // TODO FILE STATS
+    }, [router.pathname])
+
     return (
         <Sidebar>
             <SidebarHeader >
@@ -79,7 +82,7 @@ export function AppSidebar() {
             <SidebarContent >
                 <SidebarMenu>
 
-                    <FolderTree></FolderTree>
+                    <FolderTree redirect={true}></FolderTree>
 
                 </SidebarMenu>
 
@@ -88,20 +91,20 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <div className="flex flex-col p-2 bg-zinc-200 justify-center whitespace-nowrap rounded-md text-sm font-medium dark:bg-zinc-800 dark:text-zinc-400">
                         <p className="text-xs">
-                            Files: {fileStats.length}
+                            Files: insert api call here
                         </p>
                         <p className="text-xs">
-                            Folders: {folderStats.length}
+                            Folders: api call here
                         </p>
                         <p className="text-xs">
-                            Total Size: {formatFileSize(Object.values(fileStats || {}).reduce((total, file) => total + (file.size || 0), 0))}
+                            Total size: insert api call
+                            {/* Total Size: {formatFileSize(Object.values(fileStats || {}).reduce((total, file) => total + (file.size || 0), 0))} */}
                         </p>
                     </div>
 
                     <SidebarMenuButton onClick={() => { handleSignOut() }} className="hover:bg-red-600 hover:text-white font-semibold">
                         Sign Out
                     </SidebarMenuButton>
-
                 </SidebarMenu>
             </SidebarFooter>
         </Sidebar>

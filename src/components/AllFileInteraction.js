@@ -255,7 +255,7 @@ const AllFileInteraction = ({ path }) => {
 
                     </div>
 
-                    <DernTable data={combinedData} triggerRefresh={triggerRefresh} path={path} />
+                    <DernTable data={combinedData} triggerRefresh={triggerRefresh} path={path} currentDirectoryId={data.parentId} />
                 </div>
             )}
 

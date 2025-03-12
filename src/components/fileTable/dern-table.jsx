@@ -1,5 +1,5 @@
 import { Table, TableCaption, TableHeader, TableRow, TableHead, TableCell, TableBody } from "../ui/table"
-import { MoreHorizontal, MoveLeft } from "lucide-react"
+import { Folder, MoreHorizontal, MoveLeft } from "lucide-react"
 import { useState, useEffect } from 'react';
 import { Checkbox } from "../ui/checkbox";
 import { useRouter } from "next/router";
@@ -39,14 +39,20 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
 import { Button } from '@/components/ui/button'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
+import FolderTree from "../folderHierharchy/folderTree";
+import clsx from "clsx";
 
-const DernTable = ({ data: initialData, triggerRefresh, path }) => {
+const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId }) => {
 
     const [data, setData] = useState(initialData);
     const [sortConfig, setSortConfig] = useState({ property: null, order: "asc" });
     const [selectedRows, setSelectedRows] = useState([]);
     const [draggedRows, setDraggedRows] = useState([]);
     const [lastSelectedIndex, setLastSelectedIndex] = useState(null);
+    const [dialogType, setDialogType] = useState("");
+
+    const [selectedFolderMoveId, setSelectedFolderMoveId] = useState(null);
+
     const router = useRouter();
 
     const onSubmit = async (event) => {
@@ -174,6 +180,38 @@ const DernTable = ({ data: initialData, triggerRefresh, path }) => {
                 files: files,
                 folders: folders,
                 targetFolder: folderRow.Id,
+            })
+
+            triggerRefresh();
+        }
+        setDraggedRows([]);
+        setSelectedRows([]);
+    };
+
+    const handleManualMove = async (row) => {
+        // fake dragging rows
+        const selectedFileRows = selectedRows.length
+            ? selectedRows.map((rowIndex) => data[rowIndex]) // Get data for selected rows
+            : [row]; // If no rows are selected, drag the current row
+
+
+        if (selectedFileRows.length > 0) {
+
+            console.log(selectedFolderMoveId);
+
+            const folders = selectedFileRows.filter((row) => row.RowType === "Folder");
+            const files = selectedFileRows.filter((row) => row.RowType === "File");
+
+            // cannot pass folder into itself infinite black hole
+            if (folders.some(folder => folder.Id === selectedFolderMoveId)) {
+                alert("Error: A folder cannot be moved into itself!");
+                return; // Stop execution
+            }
+
+            await axios.post('/api/file/move', {
+                files: files,
+                folders: folders,
+                targetFolder: selectedFolderMoveId,
             })
 
             triggerRefresh();
@@ -355,30 +393,52 @@ const DernTable = ({ data: initialData, triggerRefresh, path }) => {
                                 </ContextMenuTrigger>
                                 <ContextMenuContent>
                                     <DialogTrigger asChild>
-                                        <ContextMenuItem>
-                                            New Folder
-                                        </ContextMenuItem>
+                                        <ContextMenuItem onClick={() => setDialogType("New Folder")}>New Folder</ContextMenuItem>
                                     </DialogTrigger>
                                     <ContextMenuSeparator />
-                                    <ContextMenuItem>Edit</ContextMenuItem>
+                                    <DialogTrigger asChild>
+                                        <ContextMenuItem onClick={() => setDialogType("Move")}>Move</ContextMenuItem>
+                                    </DialogTrigger>
                                     <ContextMenuItem onClick={() => { handleDelete(row) }}>Delete</ContextMenuItem>
                                 </ContextMenuContent>
 
                             </ContextMenu>
-                            <DialogContent className="sm:max-w-[425px]">
+                            <DialogContent className={clsx(
+                                "sm:max-w-[450px] flex flex-col ninety-max-height", // Enables flexbox for height management
+                                {
+                                    "sm:max-w-[450px]": dialogType === "New Folder",
+                                    "sm:max-w-[450px] sm:max-h-[500px]": dialogType === "Move",
+                                }
+                            )}>
                                 <DialogTitle>
-                                    New Folder
+                                    {dialogType}
                                 </DialogTitle>
-                                <DialogHeader>
-                                </DialogHeader>
-                                <form onSubmit={onSubmit}>
-                                    <div className="flex space-x-3">
-                                        <Input name="folderName" placeholder="Folder name" />
-                                        <DialogClose asChild>
-                                            <Button className="w-16" type="submit">Create</Button>
-                                        </DialogClose>
+
+                                {dialogType === "New Folder" && (
+                                    <form onSubmit={onSubmit}>
+                                        <div className="flex space-x-3">
+                                            <Input name="folderName" placeholder="Folder name" />
+                                            <DialogClose asChild>
+                                                <Button className="w-16" type="submit">Create</Button>
+                                            </DialogClose>
+                                        </div>
+                                    </form>
+                                )}
+
+                                {dialogType === "Move" && (
+                                    <div className="border-[1px] border-solid p-2 flex- overflow-y-auto">
+                                        <FolderTree redirect={false} onSelect={setSelectedFolderMoveId} selectedNode={selectedFolderMoveId} currentDirectoryId={currentDirectoryId} />
                                     </div>
-                                </form>
+                                )}
+
+                                <DialogFooter>
+                                    <DialogClose asChild>
+                                        {dialogType === "Move" && (
+                                            <Button disabled={!selectedFolderMoveId} className="w-32" onClick={() => { handleManualMove(row) }}>Confirm Move</Button>
+                                        )}
+                                    </DialogClose>
+                                </DialogFooter>
+
 
                             </DialogContent>
                         </Dialog>
