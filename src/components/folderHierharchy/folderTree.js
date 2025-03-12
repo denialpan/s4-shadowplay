@@ -72,11 +72,11 @@ const FolderTreeView = ({ nodes, redirect, onSelect, selectedNode, currentDirect
     return (
         <ul className="text-sm ml-2 border-l">
             {nodes
-                .filter(node => node.id !== currentDirectoryId && node.id !== "root")
+                .filter(node => node.id !== currentDirectoryId && currentDirectoryId !== "root")
                 .map((node) => (
                     <div key={node.id} className={`mt-1 `}>
                         <div
-                            className={`flex items-center cursor-pointer ${!redirect && selectedNode?.id === node.id ? "bg-gray-300 dark:bg-gray-700" : ""
+                            className={`flex items-center cursor-pointer ${!redirect && selectedNode === node.id ? "bg-gray-300 dark:bg-gray-700" : ""
                                 }`}
                         >
                             <span className="mr-2" onClick={() => toggleExpand(node.id)}>

@@ -215,6 +215,7 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
             })
 
             triggerRefresh();
+            setSelectedFolderMoveId(null);
         }
         setDraggedRows([]);
         setSelectedRows([]);
