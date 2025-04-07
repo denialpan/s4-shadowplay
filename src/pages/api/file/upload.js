@@ -56,6 +56,20 @@ export default async function handler(req, res) {
             const fileUUIDs = fields.fileUUID;
             const db = connectFileSystem();
 
+            const userId = await new Promise((resolve, reject) => {
+                db.get(
+                    `SELECT id FROM users WHERE username = ?`,
+                    [username],
+                    (err, row) => {
+                        if (err || !row) {
+                            console.error("User not found or error fetching user ID:", err);
+                            return reject("User not found");
+                        }
+                        resolve(row.id);
+                    }
+                );
+            });
+
             let fPath = 'root'
             console.log(fields.path);
             if (fields.path !== undefined) {
@@ -63,7 +77,6 @@ export default async function handler(req, res) {
             }
 
             fPath = decodeURIComponent(fPath);
-            console.log("SOHOS")
             console.log(fPath);
             console.log(fPath.split('/').filter((segment) => segment.trim() !== ''));
 
@@ -84,7 +97,7 @@ export default async function handler(req, res) {
                     try {
                         db.run(
                             `INSERT INTO files (id, s3_key, name, folder_id, size, type, file_extension, owner) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                            [fileUUID, "DREW S3 KEY", fileName, folderId, file.size, fileType, fileExtension, 1],
+                            [fileUUID, "DREW S3 KEY", fileName, folderId, file.size, fileType, fileExtension, userId],
                             function (err) {
                                 if (err) {
                                     console.error('Error creating file to database:', err.message);
