@@ -7,6 +7,6 @@ export default function FolderPage() {
     const { path } = router.query;
 
     return (
-        <AllFileInteraction path={path || []} />
+        <AllFileInteraction path={path || []} search={false} />
     )
 }
