@@ -16,7 +16,7 @@ import { useRefresh } from '@/utils/refreshContent';
 
 axios.defaults.withCredentials = true;
 
-const AllFileInteraction = ({ path }) => {
+const AllFileInteraction = ({ path, search }) => {
 
     // refresh trigger
     const { refreshCounter, triggerRefresh } = useRefresh();
@@ -33,33 +33,65 @@ const AllFileInteraction = ({ path }) => {
     const [s3Progress, setS3Progress] = useState({});
     const router = useRouter();
 
+    const { query } = router;
+
     const fetchFolderContents = async () => {
 
-        let folderPath = "";
-        if (path) {
-            folderPath = Array.isArray(path) ? path.join("/") : "";
+        if (!search) {
+
+            let folderPath = "";
+            if (path) {
+                folderPath = Array.isArray(path) ? path.join("/") : "";
+            }
+
+            await axios.get(`/api/file/retrieve`, {
+                params: {
+                    folderPath: folderPath,
+                }
+            }).then((response) => {
+
+                console.log(response.data);
+                setData(response.data || []);
+                setValid(true);
+
+            }).catch(function (error) {
+
+                if (error.response) {
+                    setValid(false);
+                    setData({ subFolders: [], subFiles: [] });
+                }
+
+            }).finally(() => {
+                setLoading(false);
+            });
+
+            // search filtering data results
+        } else {
+
+            const fetchResults = async (params) => {
+
+                await axios.get('/api/file/search', {
+                    params
+                }).then((response) => {
+                    setData({ subFolders: [], subFiles: response.data.files || [] });
+                    setValid(true);
+                }).catch(function (error) {
+                    if (error.response) {
+                        setValid(false);
+                        setData({ subFolders: [], subFiles: [] });
+                    }
+                }).finally(() => {
+                    setLoading(false);
+                })
+
+            };
+
+            if (Object.keys(query).length > 0) {
+                fetchResults(query);
+            }
+
         }
 
-        await axios.get(`/api/file/retrieve`, {
-            params: {
-                folderPath: folderPath,
-            }
-        }).then((response) => {
-
-            console.log(response.data);
-            setData(response.data || []);
-            setValid(true);
-
-        }).catch(function (error) {
-
-            if (error.response) {
-                setValid(false);
-                setData({ subFolders: [], subFiles: [] });
-            }
-
-        }).finally(() => {
-            setLoading(false);
-        });
 
     };
 
@@ -116,6 +148,7 @@ const AllFileInteraction = ({ path }) => {
             Owner: file.owner,
             Created: file.created_at,
             Modified: file.modified_at,
+            Tags: file.tags,
 
             RowType: "File",
             Id: file.id,
@@ -229,31 +262,33 @@ const AllFileInteraction = ({ path }) => {
                 <div> This directory doesn't exist. </div>
             ) : (
                 <div>
+                    {!search && (
+                        <div
+                            onDragOver={handleDragOver}
+                            onDrop={handleDrop}
+                            style={{
+                                border: '2px dashed #ccc',
+                                borderRadius: '0px',
+                                padding: '20px',
+                                marginBlock: '20px',
+                                textAlign: 'center',
+                            }}>
 
-                    <div
-                        onDragOver={handleDragOver}
-                        onDrop={handleDrop}
-                        style={{
-                            border: '2px dashed #ccc',
-                            borderRadius: '0px',
-                            padding: '20px',
-                            marginBlock: '20px',
-                            textAlign: 'center',
-                        }}>
+                            <input type="file" multiple onChange={manualFileUpload} />
 
-                        <input type="file" multiple onChange={manualFileUpload} />
+                            <ul>
+                                {uploadFiles.map(({ file, fileUUID }) => (
+                                    <li key={fileUUID}>
+                                        <p>{file.name}</p>
+                                        <p>Client-to-Backend Progress: {uploadProgress[fileUUID] || 0}%</p>
+                                        <p>Backend-to-S3 Progress: {s3Progress[fileUUID] || 0}%</p>
+                                    </li>
+                                ))}
+                            </ul>
 
-                        <ul>
-                            {uploadFiles.map(({ file, fileUUID }) => (
-                                <li key={fileUUID}>
-                                    <p>{file.name}</p>
-                                    <p>Client-to-Backend Progress: {uploadProgress[fileUUID] || 0}%</p>
-                                    <p>Backend-to-S3 Progress: {s3Progress[fileUUID] || 0}%</p>
-                                </li>
-                            ))}
-                        </ul>
+                        </div>
+                    )}
 
-                    </div>
 
                     <DernTable data={combinedData} triggerRefresh={triggerRefresh} path={path} currentDirectoryId={data.parentId} />
                 </div>
