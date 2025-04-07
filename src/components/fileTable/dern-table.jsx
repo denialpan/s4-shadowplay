@@ -30,6 +30,8 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
+import { Badge } from "../ui/badge";
+
 import { useForm } from "react-hook-form"
 
 import { Input } from "@/components/ui/input"
@@ -40,6 +42,7 @@ import { Button } from '@/components/ui/button'
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import FolderTree from "../folderHierharchy/folderTree";
+import TagSelector from "../tagging/tagSelector";
 import clsx from "clsx";
 
 const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId }) => {
@@ -55,7 +58,7 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
 
     const router = useRouter();
 
-    const onSubmit = async (event) => {
+    const onSubmitNewFolder = async (event) => {
 
         event.preventDefault();
 
@@ -247,7 +250,6 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
     return (
 
         <ScrollArea className="h-[calc(100vh-220px)] w-full">
-
             <Table>
                 {/* <TableCaption>s4-shadowplay</TableCaption> */}
                 <TableHeader>
@@ -270,6 +272,7 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
                         <TableHead onClick={() => { sortData('Name'); setSelectedRows([]); }}>Name</TableHead>
                         <TableHead onClick={() => { sortData('Modified'); setSelectedRows([]); }}>Last Modified</TableHead>
                         <TableHead onClick={() => { sortData('Size'); setSelectedRows([]); }}>Size</TableHead>
+                        <TableHead onClick={() => { sortData('Tags'); setSelectedRows([]); }}>Tags</TableHead>
                         <TableHead onClick={() => { sortData('Owner'); setSelectedRows([]); }}>Owner</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -319,7 +322,7 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
                             </DialogTitle>
                             <DialogHeader>
                             </DialogHeader>
-                            <form onSubmit={onSubmit}>
+                            <form onSubmit={onSubmitNewFolder}>
                                 <div className="flex space-x-3">
                                     <Input name="folderName" placeholder="Folder name" />
                                     <DialogClose asChild>
@@ -386,10 +389,19 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
                                                 ? row.Size
                                                 : formatFileSize(row.Size)}
                                         </TableCell>
-                                        <TableCell>{row.Owner}</TableCell>
                                         <TableCell>
-                                            <MoreHorizontal size="16" />
+                                            {row.Tags && row.Tags.length > 0 ? (
+                                                row.Tags.map((tag, i) => (
+                                                    <Badge key={i} variant="outline" className="text-xs">
+                                                        {tag}
+                                                    </Badge>
+                                                ))
+                                            ) : (
+                                                <span className="text-muted-foreground text-xs italic">No tags</span>
+                                            )}
                                         </TableCell>
+                                        <TableCell>{row.Owner}</TableCell>
+
                                     </TableRow>
                                 </ContextMenuTrigger>
                                 <ContextMenuContent>
@@ -399,6 +411,9 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
                                     <ContextMenuSeparator />
                                     <DialogTrigger asChild>
                                         <ContextMenuItem onClick={() => setDialogType("Move")}>Move</ContextMenuItem>
+                                    </DialogTrigger>
+                                    <DialogTrigger asChild>
+                                        <ContextMenuItem onClick={() => setDialogType("Add Tag")}>Add Tag</ContextMenuItem>
                                     </DialogTrigger>
                                     <ContextMenuItem onClick={() => { handleDelete(row) }}>Delete</ContextMenuItem>
                                 </ContextMenuContent>
@@ -416,7 +431,7 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
                                 </DialogTitle>
 
                                 {dialogType === "New Folder" && (
-                                    <form onSubmit={onSubmit}>
+                                    <form onSubmit={onSubmitNewFolder}>
                                         <div className="flex space-x-3">
                                             <Input name="folderName" placeholder="Folder name" />
                                             <DialogClose asChild>
@@ -430,6 +445,10 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
                                     <div className="border-[1px] border-solid p-2 flex- overflow-y-auto">
                                         <FolderTree redirect={false} onSelect={setSelectedFolderMoveId} selectedNode={selectedFolderMoveId} currentDirectoryId={currentDirectoryId} />
                                     </div>
+                                )}
+
+                                {dialogType === "Add Tag" && (
+                                    <TagSelector fileId={row.Id} onTagsUpdated={(tags) => console.log("Updated Tags:", tags)} />
                                 )}
 
                                 <DialogFooter>
