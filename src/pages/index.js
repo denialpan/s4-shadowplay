@@ -2,7 +2,7 @@ import AllFileInteraction from '@/components/AllFileInteraction';
 
 const index = () => {
     return (
-        <AllFileInteraction path={null} />
+        <AllFileInteraction path={null} search={false} />
     )
 };
 
