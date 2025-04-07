@@ -69,19 +69,35 @@ export default async function handler(req, res) {
         })
         const subFiles = await new Promise((resolve, reject) => {
             db.all(
-                `SELECT * FROM files WHERE folder_id = ?`,
+                `
+                SELECT 
+                    files.id, files.name, files.s3_key, files.folder_id, files.size, 
+                    files.type, files.file_extension, files.created_at, files.modified_at, 
+                    users.username AS owner,
+                    GROUP_CONCAT(tags.name) AS tag_names
+                FROM files
+                LEFT JOIN users ON files.owner = users.id
+                LEFT JOIN file_tags ON files.id = file_tags.file_id
+                LEFT JOIN tags ON file_tags.tag_id = tags.id
+                WHERE files.folder_id = ?
+                GROUP BY files.id
+                `,
                 [parentId],
                 (err, rows) => {
                     if (err) {
-                        console.error('Error querying folders:', err.message);
-                        return;
+                        console.error('Error querying files with tags:', err.message);
+                        reject(err);
+                    } else {
+                        // Return each file with a 'tags' array only (no tag_names)
+                        const processed = rows.map(({ tag_names, ...file }) => ({
+                            ...file,
+                            tags: tag_names ? tag_names.split(',') : []
+                        }));
+                        resolve(processed);
                     }
-                    resolve(rows);
-
                 }
-            )
-
-        })
+            );
+        });
 
         res.status(200).json({
             parentId,
