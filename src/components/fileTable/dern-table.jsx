@@ -30,10 +30,10 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form"
+
 import { Badge } from "../ui/badge";
 
 import { useForm } from "react-hook-form"
-
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
@@ -52,7 +52,12 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
     const [selectedRows, setSelectedRows] = useState([]);
     const [draggedRows, setDraggedRows] = useState([]);
     const [lastSelectedIndex, setLastSelectedIndex] = useState(null);
+
     const [dialogType, setDialogType] = useState("");
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    const [previewUrl, setPreviewUrl] = useState(null);
+    const [previewFile, setPreviewFile] = useState(null);
 
     const [selectedFolderMoveId, setSelectedFolderMoveId] = useState(null);
 
@@ -208,7 +213,7 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
             // cannot pass folder into itself infinite black hole
             if (folders.some(folder => folder.Id === selectedFolderMoveId)) {
                 alert("Error: A folder cannot be moved into itself!");
-                return; // Stop execution
+                return;
             }
 
             await axios.post('/api/file/move', {
@@ -230,9 +235,6 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
         const deleteFiles = selectedFileRows.filter((r) => r.RowType === "File");
         const deleteFolders = selectedFileRows.filter((r) => r.RowType === "Folder");
 
-        // if is single selection
-        // if is multi selection
-
         console.log(deleteFiles);
         console.log(deleteFolders);
 
@@ -246,6 +248,11 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
         triggerRefresh();
         setSelectedRows([]);
     };
+
+    const handleTemporaryShare = async (row) => {
+        const res = await axios.get("/api/file/preview", { params: { key: row.S3Key } });
+        await navigator.clipboard.writeText(res.data.url);
+    }
 
     return (
 
@@ -277,198 +284,232 @@ const DernTable = ({ data: initialData, triggerRefresh, path, currentDirectoryId
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    <Dialog>
-                        <ContextMenu key="cd .." modal={false}>
+                    <ContextMenu key="cd .." modal={false}>
+                        <ContextMenuTrigger asChild>
+                            <TableRow onDoubleClick={() => {
+                                const regex = /folder\/[^/]+$/;
+                                if (regex.test(router.asPath)) {
+                                    router.push('/')
+                                } else {
+                                    router.push(router.asPath.substring(0, router.asPath.lastIndexOf('/')))
+                                }
+                            }}
+                                key="previous"
+                                className={`hover:bg-zinc-400`} // Highlight selected row
+                            >
+                                <TableCell className="max-w-1">
+                                    <MoveLeft size="16" />
+                                </TableCell>
+                                <TableCell className="max-w-1">
+                                    -
+                                </TableCell>
+                                <TableCell>-</TableCell>
+                                <TableCell>-</TableCell>
+                                <TableCell>-</TableCell>
+                                <TableCell>-</TableCell>
+
+                            </TableRow>
+                        </ContextMenuTrigger>
+                        <ContextMenuContent>
+                            <ContextMenuItem onClick={() => { setDialogType("New Folder"); setDialogOpen(true); }}>New Folder</ContextMenuItem>
+                        </ContextMenuContent>
+
+                    </ContextMenu>
+
+                    {data.map((row, index) => (
+                        <ContextMenu key={index} modal={false}>
                             <ContextMenuTrigger asChild>
-                                <TableRow onDoubleClick={() => {
-                                    const regex = /folder\/[^/]+$/;
-                                    if (regex.test(router.asPath)) {
-                                        router.push('/')
-                                    } else {
-                                        router.push(router.asPath.substring(0, router.asPath.lastIndexOf('/')))
+                                <TableRow
+                                    key={row.Id}
+                                    data-index={index}
+                                    draggable={row.RowType === "File" || row.RowType === "Folder"} // Only files are draggable
+                                    onDragStart={() => handleDragStart(row)}
+                                    onDrop={row.RowType === "Folder" ? () => handleDropOnFolder(row) : undefined}
+                                    onDragOver={(event) => {
+                                        row.RowType === "Folder" &&
+                                            !draggedRows.some((draggedRow) => draggedRow.Id === row.Id)
+                                            ? event.preventDefault()
+                                            : undefined
                                     }
-                                }}
-                                    key="previous"
-                                    className={`hover:bg-zinc-400`} // Highlight selected row
+
+                                    }
+                                    onClick={(event) => { toggleRowSelection(index, event) }}
+                                    onDoubleClick={async () => {
+                                        if (row.RowType === "Folder") {
+
+                                            if (row.Parent === 'root') {
+                                                router.push(`/folder/${row.Name}`);
+                                            } else {
+                                                router.push(`${router.asPath}/${row.Name}`);
+                                            }
+                                        } else if (row.RowType === "File") {
+                                            const streamUrl = `/api/file/stream?key=${encodeURIComponent(row.S3Key)}`;
+
+                                            setPreviewUrl(streamUrl);
+                                            setPreviewFile(row);
+                                            setDialogType("Preview");
+                                            setDialogOpen(true);
+                                        }
+                                    }}
+                                    className={`hover:bg-zinc-400 ${selectedRows.includes(index) ? "bg-zinc-300 dark:bg-zinc-600" : ""
+                                        }`} // Highlight selected row
                                 >
                                     <TableCell className="max-w-1">
-                                        <MoveLeft size="16" />
+                                        <Checkbox
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                            }}
+                                            onCheckedChange={() => {
+                                                if (selectedRows.includes(index)) {
+                                                    setSelectedRows((prev) =>
+                                                        prev.filter((i) => i !== index)
+                                                    );
+                                                } else {
+                                                    setSelectedRows((prev) => [...prev, index]);
+                                                }
+                                            }}
+                                            checked={selectedRows.includes(index)} />
                                     </TableCell>
-                                    <TableCell className="max-w-1">
-                                        -
+                                    <TableCell>{row.Name}</TableCell>
+                                    <TableCell>{formatFileDate(row.Modified)}</TableCell>
+                                    <TableCell>
+                                        {row.RowType === "Folder"
+                                            ? row.Size
+                                            : formatFileSize(row.Size)}
                                     </TableCell>
-                                    <TableCell>-</TableCell>
-                                    <TableCell>-</TableCell>
-                                    <TableCell>-</TableCell>
-                                    <TableCell>-</TableCell>
+                                    <TableCell>
+                                        {row.Tags && row.Tags.length > 0 ? (
+                                            row.Tags.map((tag, i) => (
+                                                <Badge key={i} variant="outline" className="text-xs">
+                                                    {tag}
+                                                </Badge>
+                                            ))
+                                        ) : (
+                                            <span className="text-muted-foreground text-xs italic">No tags</span>
+                                        )}
+                                    </TableCell>
+                                    <TableCell>{row.Owner}</TableCell>
 
                                 </TableRow>
                             </ContextMenuTrigger>
                             <ContextMenuContent>
-                                <DialogTrigger asChild>
-                                    <ContextMenuItem>
-                                        New Folder
-                                    </ContextMenuItem>
-                                </DialogTrigger>
+                                <ContextMenuItem onClick={() => { setDialogType("New Folder"); setDialogOpen(true); }}>New Folder</ContextMenuItem>
                                 <ContextMenuSeparator />
-                                <ContextMenuItem>Edit</ContextMenuItem>
+                                <ContextMenuItem onClick={() => { setDialogType("Move"); setDialogOpen(true); }}>Move</ContextMenuItem>
+                                <ContextMenuItem onClick={() => { setDialogType("Edit Tag"); setDialogOpen(true); }}>Edit Tag</ContextMenuItem>
+                                <ContextMenuItem onClick={() => { handleTemporaryShare(row) }}>Share</ContextMenuItem>
                                 <ContextMenuItem onClick={() => { handleDelete(row) }}>Delete</ContextMenuItem>
                             </ContextMenuContent>
 
                         </ContextMenu>
-                        <DialogContent className="sm:max-w-[425px]">
-                            <DialogTitle>
-                                New Folder
-                            </DialogTitle>
-                            <DialogHeader>
-                            </DialogHeader>
-                            <form onSubmit={onSubmitNewFolder}>
-                                <div className="flex space-x-3">
-                                    <Input name="folderName" placeholder="Folder name" />
-                                    <DialogClose asChild>
-                                        <Button className="w-16" type="submit">Create</Button>
-                                    </DialogClose>
-                                </div>
-                            </form>
 
-                        </DialogContent>
-                    </Dialog>
+                    ))}
 
-                    {data.map((row, index) => (
-                        <Dialog>
-                            <ContextMenu key={index} modal={false}>
-                                <ContextMenuTrigger asChild>
-                                    <TableRow
-                                        key={row.Id}
-                                        data-index={index}
-                                        draggable={row.RowType === "File" || row.RowType === "Folder"} // Only files are draggable
-                                        onDragStart={() => handleDragStart(row)}
-                                        onDrop={row.RowType === "Folder" ? () => handleDropOnFolder(row) : undefined}
-                                        onDragOver={(event) => {
-                                            row.RowType === "Folder" &&
-                                                !draggedRows.some((draggedRow) => draggedRow.Id === row.Id)
-                                                ? event.preventDefault()
-                                                : undefined
-                                        }
-
-                                        }
-                                        onClick={(event) => { toggleRowSelection(index, event) }}
-                                        onDoubleClick={() => {
-                                            if (row.RowType === "Folder") {
-
-                                                if (row.Parent === 'root') {
-                                                    router.push(`/folder/${row.Name}`);
-                                                } else {
-                                                    router.push(`${router.asPath}/${row.Name}`);
-                                                }
-                                            }
-                                        }}
-                                        className={`hover:bg-zinc-400 ${selectedRows.includes(index) ? "bg-zinc-300 dark:bg-zinc-600" : ""
-                                            }`} // Highlight selected row
-                                    >
-                                        <TableCell className="max-w-1">
-                                            <Checkbox
-                                                onClick={(event) => {
-                                                    event.stopPropagation();
-                                                }}
-                                                onCheckedChange={() => {
-                                                    if (selectedRows.includes(index)) {
-                                                        setSelectedRows((prev) =>
-                                                            prev.filter((i) => i !== index)
-                                                        );
-                                                    } else {
-                                                        setSelectedRows((prev) => [...prev, index]);
-                                                    }
-                                                }}
-                                                checked={selectedRows.includes(index)} />
-                                        </TableCell>
-                                        <TableCell>{row.Name}</TableCell>
-                                        <TableCell>{formatFileDate(row.Modified)}</TableCell>
-                                        <TableCell>
-                                            {row.RowType === "Folder"
-                                                ? row.Size
-                                                : formatFileSize(row.Size)}
-                                        </TableCell>
-                                        <TableCell>
-                                            {row.Tags && row.Tags.length > 0 ? (
-                                                row.Tags.map((tag, i) => (
-                                                    <Badge key={i} variant="outline" className="text-xs">
-                                                        {tag}
-                                                    </Badge>
-                                                ))
-                                            ) : (
-                                                <span className="text-muted-foreground text-xs italic">No tags</span>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>{row.Owner}</TableCell>
-
-                                    </TableRow>
-                                </ContextMenuTrigger>
-                                <ContextMenuContent>
-                                    <DialogTrigger asChild>
-                                        <ContextMenuItem onClick={() => setDialogType("New Folder")}>New Folder</ContextMenuItem>
-                                    </DialogTrigger>
-                                    <ContextMenuSeparator />
-                                    <DialogTrigger asChild>
-                                        <ContextMenuItem onClick={() => setDialogType("Move")}>Move</ContextMenuItem>
-                                    </DialogTrigger>
-                                    <DialogTrigger asChild>
-                                        <ContextMenuItem onClick={() => setDialogType("Add Tag")}>Add Tag</ContextMenuItem>
-                                    </DialogTrigger>
-                                    <ContextMenuItem onClick={() => { handleDelete(row) }}>Delete</ContextMenuItem>
-                                </ContextMenuContent>
-
-                            </ContextMenu>
-                            <DialogContent className={clsx(
-                                "sm:max-w-[450px] flex flex-col ninety-max-height", // Enables flexbox for height management
+                    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                        <DialogContent
+                            className={clsx(
+                                "flex flex-col ninety-max-height",
                                 {
                                     "sm:max-w-[450px]": dialogType === "New Folder",
                                     "sm:max-w-[450px] sm:max-h-[500px]": dialogType === "Move",
+                                    "sm:max-w-[75vw]": dialogType === "Preview",
                                 }
-                            )}>
-                                <DialogTitle>
-                                    {dialogType}
-                                </DialogTitle>
+                            )}
+                        >
 
-                                {dialogType === "New Folder" && (
-                                    <form onSubmit={onSubmitNewFolder}>
-                                        <div className="flex space-x-3">
-                                            <Input name="folderName" placeholder="Folder name" />
-                                            <DialogClose asChild>
-                                                <Button className="w-16" type="submit">Create</Button>
-                                            </DialogClose>
-                                        </div>
-                                    </form>
-                                )}
+                            <DialogTitle>{dialogType}</DialogTitle>
 
-                                {dialogType === "Move" && (
-                                    <div className="border-[1px] border-solid p-2 flex- overflow-y-auto">
-                                        <FolderTree redirect={false} onSelect={setSelectedFolderMoveId} selectedNode={selectedFolderMoveId} currentDirectoryId={currentDirectoryId} />
+                            {dialogType === "New Folder" && (
+                                <form onSubmit={onSubmitNewFolder}>
+                                    <div className="flex space-x-3">
+                                        <Input name="folderName" placeholder="Folder name" />
+                                        <DialogClose asChild>
+                                            <Button className="w-16" type="submit">Create</Button>
+                                        </DialogClose>
                                     </div>
-                                )}
+                                </form>
+                            )}
 
-                                {dialogType === "Add Tag" && (
-                                    <TagSelector fileId={row.Id} onTagsUpdated={(tags) => console.log("Updated Tags:", tags)} />
-                                )}
+                            {dialogType === "Move" && (
+                                <div className="border p-2 overflow-y-auto">
+                                    <FolderTree
+                                        redirect={false}
+                                        onSelect={setSelectedFolderMoveId}
+                                        selectedNode={selectedFolderMoveId}
+                                        currentDirectoryId={currentDirectoryId}
+                                    />
+                                </div>
+                            )}
 
-                                <DialogFooter>
+                            {dialogType === "Preview" && previewFile && previewUrl && (
+                                <div className="mt-4 flex justify-center items-center max-h-[90vh] max-w-[90vw] overflow-hidden">
+                                    {(() => {
+                                        const cleanedExtension = previewFile.file_extension?.replace(/^\./, '') || '';
+                                        const mimeType = cleanedExtension ? `${previewFile.Type}/${cleanedExtension}` : undefined;
+
+                                        if (previewFile.Type === "video") {
+                                            return (
+                                                <video controls autoPlay className="w-full h-auto max-h-[90vh] max-w-[90vw]">
+                                                    <source src={`/api/file/stream?key=${encodeURIComponent(previewFile.S3Key)}`} />
+                                                    Your browser does not support the video tag.
+                                                </video>
+                                            );
+                                        }
+
+                                        if (previewFile.Type === "audio") {
+                                            return (
+                                                <audio controls autoPlay className="w-full mt-2">
+                                                    <source src={previewUrl} type={mimeType} />
+                                                    Your browser does not support the audio tag.
+                                                </audio>
+                                            );
+                                        }
+
+                                        if (previewFile.Type === "image") {
+                                            return (
+                                                <img
+                                                    src={previewUrl}
+                                                    alt={previewFile.Name}
+                                                    className="max-w-full max-h-[60vh] rounded"
+                                                />
+                                            );
+                                        }
+
+                                        return (
+                                            <p className="text-sm italic text-muted-foreground">
+                                                Preview not available for this file type.
+                                            </p>
+                                        );
+                                    })()}
+                                </div>
+                            )}
+
+
+
+                            {dialogType === "Add Tag" && previewFile && (
+                                <TagSelector fileId={previewFile.Id} onTagsUpdated={(tags) => console.log("Updated Tags:", tags)} />
+                            )}
+
+                            <DialogFooter>
+                                {dialogType === "Move" && (
                                     <DialogClose asChild>
-                                        {dialogType === "Move" && (
-                                            <Button disabled={!selectedFolderMoveId} className="w-32" onClick={() => { handleManualMove(row) }}>Confirm Move</Button>
-                                        )}
+                                        <Button
+                                            disabled={!selectedFolderMoveId}
+                                            className="w-32"
+                                            onClick={() => handleManualMove(previewFile)}
+                                        >
+                                            Confirm Move
+                                        </Button>
                                     </DialogClose>
-                                </DialogFooter>
+                                )}
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
 
-
-                            </DialogContent>
-                        </Dialog>
-
-
-                    ))}
                 </TableBody>
             </Table >
             <ScrollBar orientation="horizontal" />
-        </ScrollArea>
+        </ScrollArea >
 
 
     )
