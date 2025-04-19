@@ -15,6 +15,7 @@ export default async function handler(req, res) {
 
         const fileIds = files.map((file) => file.Id);
         const folderIds = folders.map((folder) => folder.Id);
+        const s3Keys = files.map((file) => ({ Key: file.S3Key }));
 
         console.log(fileIds);
         console.log(folderIds);
@@ -23,12 +24,17 @@ export default async function handler(req, res) {
 
         try {
 
-            // // Handle single file deletion
-            // const params = {
-            //     Bucket: process.env.AWS_S3_BUCKET,
-            //     Key: fileId,
-            // };
-            // await s3.deleteObject(params).promise();
+            if (s3Keys.length > 0) {
+                await s3
+                    .deleteObjects({
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Delete: {
+                            Objects: s3Keys,
+                            Quiet: true,
+                        },
+                    })
+                    .promise();
+            }
 
             if (fileIds.length > 0) {
                 // // Handle multiple file deletions
