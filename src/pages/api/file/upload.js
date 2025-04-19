@@ -23,13 +23,6 @@ export const config = {
 
 let sseResponse = null; // Shared SSE connection
 
-const generateTimeUUID = () => {
-    const time = new Date().toISOString().replace(/[-:.TZ]/g, '');
-    const UUID = uuidv4();
-    return `${time}-${UUID}`;
-}
-
-
 export default async function handler(req, res) {
 
     if (req.method === 'POST') {
@@ -94,10 +87,37 @@ export default async function handler(req, res) {
                     const fileType = file.headers['content-type'].split('/')[0]
                     const fileExtension = path.extname(fileName);
 
+                    const s3_key = `${username}/${path.parse(fileName).name}-${fileUUID}${fileExtension}`;
+
+                    const params = {
+                        Bucket: process.env.AWS_S3_BUCKET,
+                        Key: s3_key,
+                        Body: fileStream,
+                        ContentType: fields.type[index],
+                        ACL: 'private',
+                    };
+
+                    const options = { partSize: 5 * 1024 * 1024, queueSize: 1 };
+                    const upload = s3.upload(params, options);
+
+                    upload.on('httpUploadProgress', (progress) => {
+                        const percentage = Math.round((progress.loaded / progress.total) * 100);
+                        console.log(`Progress for ${fileName} (UUID: ${fileUUID}): ${percentage}%`);
+
+                        if (sseResponse) {
+                            sseResponse.write(
+                                `data: ${JSON.stringify({ fileUUID, fileName, progress: percentage })}\n\n`
+                            );
+                            sseResponse.flush();
+                        }
+                    });
+
                     try {
+
+                        await upload.promise();
                         db.run(
                             `INSERT INTO files (id, s3_key, name, folder_id, size, type, file_extension, owner) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                            [fileUUID, "DREW S3 KEY", fileName, folderId, file.size, fileType, fileExtension, userId],
+                            [fileUUID, s3_key, fileName, folderId, file.size, fileType, fileExtension, userId],
                             function (err) {
                                 if (err) {
                                     console.error('Error creating file to database:', err.message);
