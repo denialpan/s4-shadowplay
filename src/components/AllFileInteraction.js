@@ -149,6 +149,7 @@ const AllFileInteraction = ({ path, search }) => {
             Created: file.created_at,
             Modified: file.modified_at,
             Tags: file.tags,
+            S3Key: file.s3_key,
 
             RowType: "File",
             Id: file.id,
@@ -162,7 +163,7 @@ const AllFileInteraction = ({ path, search }) => {
         const filesWithUUIDs = await Promise.all(
             Array.from(selectedFiles).map(async (file) => ({
                 file,
-                fileUUID: await generateTimeUUID(), // Assuming generateTimeUUID is async
+                fileUUID: await generateTimeUUID(),
             }))
         );
         setUploadFiles((prevFiles) => [...prevFiles, ...filesWithUUIDs]);
