@@ -3,6 +3,35 @@ import { connectFileSystem } from '../../../../database/connect';
 
 const s3 = S3Client;
 
+async function getAllDescendantFolderIds(db, parentFolderIds) {
+    const allFolderIds = new Set(parentFolderIds);
+
+    const queue = [...parentFolderIds];
+    while (queue.length > 0) {
+        const currentId = queue.pop();
+
+        const children = await new Promise((resolve, reject) => {
+            db.all(
+                `SELECT id FROM folders WHERE parent_id = ?`,
+                [currentId],
+                (err, rows) => {
+                    if (err) reject(err);
+                    else resolve(rows.map((row) => row.id));
+                }
+            );
+        });
+
+        for (const childId of children) {
+            if (!allFolderIds.has(childId)) {
+                allFolderIds.add(childId);
+                queue.push(childId);
+            }
+        }
+    }
+
+    return Array.from(allFolderIds);
+}
+
 export default async function handler(req, res) {
     if (req.method === 'DELETE') {
         const { files, folders } = req.body;
@@ -13,39 +42,47 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Provide a fileKey for single deletion or an array of fileKeys for multiple deletions.' });
         }
 
+        const db = connectFileSystem();
+
         const fileIds = files.map((file) => file.Id);
         const folderIds = folders.map((folder) => folder.Id);
         const s3Keys = files.map((file) => ({ Key: file.S3Key }));
 
-        console.log(fileIds);
-        console.log(folderIds);
+        let s3KeysToDelete = [];
 
-        const db = connectFileSystem();
+        if (folderIds.length > 0) {
+            const allRelatedFolderIds = await getAllDescendantFolderIds(db, folderIds);
+
+            const placeholders = allRelatedFolderIds.map(() => "?").join(",");
+            const filesInFolders = await new Promise((resolve, reject) => {
+                db.all(
+                    `SELECT s3_key FROM files WHERE folder_id IN (${placeholders})`,
+                    allRelatedFolderIds,
+                    (err, rows) => {
+                        if (err) reject(err);
+                        else resolve(rows);
+                    }
+                );
+            });
+
+            s3KeysToDelete = filesInFolders.map((row) => ({ Key: row.s3_key }));
+        }
+
+
+
 
         try {
 
-            if (s3Keys.length > 0) {
-                await s3
-                    .deleteObjects({
-                        Bucket: process.env.AWS_S3_BUCKET,
-                        Delete: {
-                            Objects: s3Keys,
-                            Quiet: true,
-                        },
-                    })
-                    .promise();
+            const allS3Keys = [...s3Keys, ...s3KeysToDelete];
+
+            if (allS3Keys.length > 0) {
+                await s3.deleteObjects({
+                    Bucket: process.env.AWS_S3_BUCKET,
+                    Delete: { Objects: allS3Keys, Quiet: true },
+                }).promise();
             }
 
             if (fileIds.length > 0) {
-                // // Handle multiple file deletions
-                // const params = {
-                //     Bucket: process.env.AWS_S3_BUCKET,
-                //     Delete: {
-                //         Objects: fileKeys.map((key) => ({ Key: key })),
-                //         Quiet: true, // Suppresses individual results in response
-                //     },
-                // };
-                // const deleteResponse = await s3.deleteObjects(params).promise();
 
                 const placeholders = fileIds.map(() => "?").join(","); // Create ?,?,? placeholders
 
@@ -60,15 +97,6 @@ export default async function handler(req, res) {
             }
 
             if (folderIds.length > 0) {
-                // // Handle multiple file deletions
-                // const params = {
-                //     Bucket: process.env.AWS_S3_BUCKET,
-                //     Delete: {
-                //         Objects: fileKeys.map((key) => ({ Key: key })),
-                //         Quiet: true, // Suppresses individual results in response
-                //     },
-                // };
-                // const deleteResponse = await s3.deleteObjects(params).promise();
 
                 const placeholders = folderIds.map(() => "?").join(","); // Create ?,?,? placeholders
                 console.log(placeholders);
