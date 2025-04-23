@@ -136,45 +136,6 @@ export default async function handler(req, res) {
                 })
             )
 
-
-            // Process each file
-            // await Promise.all(
-            //     Object.keys(files).map(async (fileField, index) => {
-            //         const file = files[fileField][0];
-            //         const fileName = fields.name[index];
-            //         const fileUUID = fileUUIDs[index];
-            //         const fileStream = fs.createReadStream(file.path);
-
-            //         const params = {
-            //             Bucket: process.env.AWS_S3_BUCKET,
-            //             Key: (fields.path !== undefined) ? `${fields.path[0]}/${fileName}` : `${fileName}`, // Use prefix only if path exists
-            //             Body: fileStream,
-            //             ContentType: fields.type[index],
-            //             ACL: 'public-read',
-            //         };
-
-            //         const options = { partSize: 5 * 1024 * 1024, queueSize: 1 }; // Ensure chunked uploads for progress
-
-            //         const upload = s3.upload(params, options);
-
-            //         upload.on('httpUploadProgress', (progress) => {
-            //             const percentage = Math.round((progress.loaded / progress.total) * 100);
-            //             console.log(`Progress for ${fileName} (UUID: ${fileUUID}): ${percentage}%`);
-
-            //             // Send progress update through SSE
-            //             if (sseResponse) {
-            //                 sseResponse.write(
-            //                     `data: ${JSON.stringify({ fileUUID, fileName, progress: percentage })}\n\n`
-            //                 );
-            //                 // Flush to ensure immediate delivery
-            //                 sseResponse.flush();
-            //             }
-            //         });
-
-            //         await upload.promise();
-            //     })
-            // );
-
             res.status(200).json({ message: 'Files uploaded successfully!' });
         });
     } else if (req.method === 'GET') {
